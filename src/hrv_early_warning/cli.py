@@ -41,6 +41,12 @@ def main(argv: list[str] | None = None) -> int:
     audit.add_argument("--paths", type=Path, required=True, help="Local TOML containing [data] paths")
     audit.add_argument("--headers", type=int, default=0, help="Number of waveform headers to inspect (default: none)")
     audit.add_argument("--output", type=Path, help="Aggregate JSON report; otherwise print to stdout")
+    feasibility = commands.add_parser("feasibility", help="Audit first-use events and same-ICU ECG metadata; not signal quality or training")
+    feasibility.add_argument("--paths", type=Path, required=True)
+    feasibility.add_argument("--protocol", type=Path, default=Path("configs/protocol.toml"))
+    feasibility.add_argument("--work-dir", type=Path, default=Path("artifacts/feasibility"), help="Private patient-level cache and outputs; keep ignored by Git")
+    feasibility.add_argument("--workers", type=int, default=8)
+    feasibility.add_argument("--output", type=Path, help="Aggregate report; otherwise print to stdout")
     protocol = commands.add_parser("protocol", help="Display the study specification; does not train a model")
     protocol.add_argument("--config", type=Path, default=Path("configs/protocol.toml"))
     args = parser.parse_args(argv)
@@ -50,11 +56,22 @@ def main(argv: list[str] | None = None) -> int:
                 report = tomllib.load(stream)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0
-        if args.headers < 0:
+        if args.command == "audit" and args.headers < 0:
             raise ValueError("--headers must be nonnegative")
         clinical_root, waveform_root = load_paths(args.paths)
         if args.output and any(args.output.resolve().is_relative_to(root) for root in (clinical_root, waveform_root)):
             raise ValueError("Report output must be outside both source dataset directories")
+        if args.command == "feasibility":
+            from .feasibility import run_feasibility
+
+            report = run_feasibility(clinical_root, waveform_root, args.work_dir, args.protocol,
+                                     workers=args.workers, progress=lambda message: print(message, file=sys.stderr))
+            if args.output:
+                write_report(report, args.output, (clinical_root, waveform_root))
+                print(f"Aggregate feasibility saved to {args.output.resolve()}")
+            else:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
         from .inventory import audit_inventory
 
         report = audit_inventory(clinical_root, waveform_root, header_sample_size=args.headers)

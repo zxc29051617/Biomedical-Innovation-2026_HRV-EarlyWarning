@@ -1,5 +1,5 @@
 [study]
-version = "0.1.0"
+version = "0.2.0"
 status = "feasibility_protocol_not_yet_frozen_for_model_evaluation"
 title_zh = "重症患者循環風險預警：結合 HRV 趨勢與訊號品質評估"
 title_en = "HRV Trends and Signal Quality for Early Warning of Circulatory Risk in ICU Patients"
@@ -11,7 +11,8 @@ clinical_dataset = "MIMIC-III v1.4"
 waveform_dataset = "MIMIC-III Waveform Database Matched Subset v1.0"
 minimum_age_years = 18
 icu_dbsource = "metavision"
-primary_population = "Adult MetaVision ICU patients; infection evidence is not an eligibility requirement in version 0.1"
+primary_population = "Adult MetaVision ICU patients; infection evidence is not an eligibility requirement"
+obscured_age = "Age over 89: retain adult eligibility, age_years=null and age_obscured=true"
 sepsis_subgroup = "Prespecified retrospective descriptive subgroup; discharge ICD codes never enter online eligibility or features"
 future_infection_extension = "Require both culture and antibiotic evidence to be available by landmark; never backdate eligibility using a future pair"
 waveform_match = "SUBJECT_ID plus overlap with the same ICUSTAY_ID time interval"
@@ -39,6 +40,8 @@ first_use_scope = "Current ICU stay; prior or ongoing vasopressor infusion exclu
 prior_exclusion_itemids = [221906, 221289, 222315, 221749, 221662]
 nonqualifying_first_use = "End risk follow-up at first exposure if it fails the primary-drug or sustained-duration condition; do not relabel a later restart as first use"
 is_septic_shock_definition = false
+uncertain_infusion = "Conservatively exclude the affected stay from this feasibility audit; never infer no exposure"
+outcome_confirmation = "Use later documented outcomes to verify actual STARTTIME and sustained duration; confirmation may extend beyond the prediction horizon, but never beyond observed follow-up"
 
 [endpoint.primary_itemids]
 norepinephrine = 221906

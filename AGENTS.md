@@ -9,4 +9,4 @@ This is an independent HRV early-warning research repository. The parent directo
 - Separate observed treatment initiation from clinical need or a septic-shock diagnosis. Report unknown data coverage and censoring explicitly.
 - Split patients before fitting preprocessing or selecting models. Keep test results out of model and feature selection.
 - Run relevant tests with `PYTHONPATH=src python -m unittest discover -s tests -v`.
-- The current CLI supports `audit` and `protocol`. Do not describe training, ECG quality assessment, or the demonstration UI as complete until implemented and verified.
+- The current CLI supports `audit`, `protocol`, and `feasibility`. The latter checks first-use events and ECG header/file coverage. Do not describe training, ECG quality assessment, or the demonstration UI as complete until implemented and verified.

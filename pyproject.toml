@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hrv-early-warning"
-version = "0.1.0"
+version = "0.2.0"
 description = "Data feasibility and temporal evaluation foundations for HRV early-warning research"
 readme = "README.md"
 requires-python = ">=3.11"

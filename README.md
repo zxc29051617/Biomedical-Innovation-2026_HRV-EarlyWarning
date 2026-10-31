@@ -8,7 +8,9 @@
 
 核心研究問題：**在相同誤報負擔下，HRV 與個人過去的變化，能否比心率、血壓等常規資訊更早辨識事件？** 模型預測的是給藥紀錄中的事件，不直接判定敗血性休克或治療必要性。
 
-目前完成資料盤點工具、時間標籤運算核心與研究規格。事件萃取、ECG 品質檢查、HRV 特徵、模型與展示介面仍待實作；目前沒有可宣稱的模型效能。
+目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件萃取、同次 ICU 波形配對，以及事件前 II 通道與資料檔存在性稽核。醫學與資料定義已整理成[附來源的證據審查](docs/clinical_evidence.md)。ECG 品質檢查、HRV 特徵、模型與展示介面仍待實作；目前沒有可宣稱的模型效能。
+
+2026-11-01 的 protocol 0.2 稽核：23,327 次成人 ICU、4,862 個首次事件；426 個事件有合法預測前 II 通道 metadata，其中 372 個至少有 3 小時、220 個有完整 6 小時覆蓋。這些是檔案存在性，尚不是品質合格的 HRV 樣本。完整排除原因與早期事件限制見[資料盤點](docs/data_inventory.md)。
 
 ## 團隊
 
@@ -51,24 +53,37 @@ PYTHONPATH=src python -m hrv_early_warning audit \
   --paths configs/paths.local.toml \
   --headers 10 \
   --output reports/local/inventory.json
+PYTHONPATH=src python -m hrv_early_warning feasibility \
+  --paths configs/paths.local.toml \
+  --work-dir artifacts/feasibility \
+  --workers 8 \
+  --output reports/local/feasibility.json
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
 `audit` 完整掃描四張較小臨床表，其他大型事件表只讀欄位；可選擇抽查少量波形標頭。報告只有彙總資訊。患者 ID 出現在波形索引中，尚不代表同次住院、預測前時間窗或訊號品質合格。
+
+`feasibility` 完整掃描一次 `INPUTEVENTS_MV`，只快取五種指定藥物；讀取成人 MetaVision 患者的 waveform master headers，再對合格事件的預測前視窗檢查 II 通道與非空資料檔。使用 `[t-6h,t)` 的實際時間交集，合併重疊覆蓋並排除 gap。它不解碼 ECG、不計算 HRV，也不代表完成模型訓練隊列。
+
+患者層級快取與交接產物只放在忽略的 `artifacts/feasibility/`；`reports/local/feasibility.json` 為彙總。快取使用來源路徑、索引大小／修改時間及版本辨識，並非逐檔內容校驗；若來源 header 更新但索引不變，請指定新的 `--work-dir` 重新稽核。不要將這些患者產物加入 Git。
 
 需要安裝命令列入口時，可在自己的虛擬環境執行 `python -m pip install -e .`；初始工具不需要額外的執行期套件。
 
 ## 文件與實作位置
 
 - [研究計畫與驗收標準](docs/project_brief.md)
-- [團隊成員與建議分工](docs/team.md)
+- [團隊成員與起始分工](docs/team.md)
 - [指導教授背景](docs/advisor_background.md)
 - [時間、終點與驗證規格](docs/protocol.md)
+- [臨床定義與官方資料來源審查](docs/clinical_evidence.md)
 - [近期里程碑](docs/roadmap.md)
 - [資料盤點證據](docs/data_inventory.md)
 - [前作與來源](docs/references.md)
 - [機器可讀規格](configs/protocol.toml)
 - `src/hrv_early_warning/inventory.py`：可重跑的資料盤點。
 - `src/hrv_early_warning/timing.py`：事件時間界線與追蹤不足處理；不是臨床事件萃取器。
+- `src/hrv_early_warning/cohort.py`、`vasopressors.py`：成人資格、輸注對齊、有效區間與首次事件。
+- `src/hrv_early_warning/waveforms.py`、`waveform_index.py`：master 時間、gap、II 通道與檔案存在性。
+- `src/hrv_early_warning/feasibility.py`：整合掃描、事件與 metadata 覆蓋報告。
 
 原始資料、患者層級產物、本機路徑設定及模型產物由 `.gitignore` 排除。此 repo 的初始實作為新寫程式，既有專案與論文的研究來源列於引用文件。

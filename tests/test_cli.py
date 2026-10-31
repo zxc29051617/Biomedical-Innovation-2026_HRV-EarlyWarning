@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from hrv_early_warning.cli import load_paths, main, write_report
 
@@ -41,6 +42,30 @@ class CliTests(unittest.TestCase):
             report = json.loads(destination.read_text())
             self.assertEqual(report["clinical_tables"]["PATIENTS.csv"]["status"], "missing")
             self.assertIsNone(report["diagnosis_cohorts"])
+
+    def test_feasibility_rejects_source_output_before_starting_any_scan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            clinical, waveform = root / "clinical", root / "waveform"
+            clinical.mkdir()
+            waveform.mkdir()
+            alias = root / "source-alias"
+            alias.symlink_to(clinical, target_is_directory=True)
+            config = root / "paths.toml"
+            config.write_text('[data]\nclinical_root="clinical"\nwaveform_root="waveform"\n')
+            for destination in (clinical / "report.json", waveform / "report.json", alias / "report.json"):
+                with self.subTest(destination=destination):
+                    error = io.StringIO()
+                    with patch("hrv_early_warning.feasibility.run_feasibility") as scan:
+                        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+                            code = main(["feasibility", "--paths", str(config),
+                                         "--work-dir", str(root / "private-work"),
+                                         "--output", str(destination)])
+                        scan.assert_not_called()
+                    self.assertEqual(code, 2)
+                    self.assertIn("outside both source dataset directories", error.getvalue())
+                    self.assertFalse(destination.exists())
+            self.assertFalse((root / "private-work").exists())
 
     def test_invalid_config_reports_readable_error(self):
         with tempfile.TemporaryDirectory() as directory:
