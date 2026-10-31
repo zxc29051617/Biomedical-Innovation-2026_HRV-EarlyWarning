@@ -1,4 +1,4 @@
-"""Command line entry points; the initial release audits data, not model performance."""
+"""Data auditing, ECG screening, and development-only model evaluation."""
 
 from __future__ import annotations
 
@@ -47,10 +47,32 @@ def main(argv: list[str] | None = None) -> int:
     feasibility.add_argument("--work-dir", type=Path, default=Path("artifacts/feasibility"), help="Private patient-level cache and outputs; keep ignored by Git")
     feasibility.add_argument("--workers", type=int, default=8)
     feasibility.add_argument("--output", type=Path, help="Aggregate report; otherwise print to stdout")
+    signals = commands.add_parser("signals", help="Decode and screen five-minute ECG epochs; resumable private cache")
+    signals.add_argument("--paths", type=Path, required=True)
+    signals.add_argument("--feasibility-dir", type=Path, default=Path("artifacts/feasibility"))
+    signals.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
+    signals.add_argument("--quality", type=Path, default=Path("configs/signal_quality.toml"))
+    signals.add_argument("--workers", type=int, default=8)
+    signals.add_argument("--output", type=Path)
+    vitals = commands.add_parser("vitals", help="Stream routine clinical observations with both timestamps")
+    vitals.add_argument("--paths", type=Path, required=True)
+    vitals.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
+    vitals.add_argument("--output", type=Path)
+    develop = commands.add_parser("develop", help="Fit fixed models on training patients; validation only, test locked")
+    develop.add_argument("--paths", type=Path, required=True)
+    develop.add_argument("--feasibility-dir", type=Path, default=Path("artifacts/feasibility"))
+    develop.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
+    develop.add_argument("--output", type=Path)
+    status = commands.add_parser("status", help="Read aggregate cache completion; never reports a partial result as final")
+    status.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
     protocol = commands.add_parser("protocol", help="Display the study specification; does not train a model")
     protocol.add_argument("--config", type=Path, default=Path("configs/protocol.toml"))
     args = parser.parse_args(argv)
     try:
+        if args.command == "status":
+            from .progress import pipeline_status
+            print(json.dumps(pipeline_status(args.work_dir), ensure_ascii=False, indent=2))
+            return 0
         if args.command == "protocol":
             with args.config.open("rb") as stream:
                 report = tomllib.load(stream)
@@ -61,6 +83,28 @@ def main(argv: list[str] | None = None) -> int:
         clinical_root, waveform_root = load_paths(args.paths)
         if args.output and any(args.output.resolve().is_relative_to(root) for root in (clinical_root, waveform_root)):
             raise ValueError("Report output must be outside both source dataset directories")
+        if args.command in {"signals", "vitals", "develop"}:
+            if any(args.work_dir.resolve().is_relative_to(root) for root in (clinical_root, waveform_root)):
+                raise ValueError("Private work directory must be outside both source dataset directories")
+            progress = lambda message: print(message, file=sys.stderr, flush=True)
+            if args.command == "signals":
+                from .signal_pipeline import run_signal_screen
+                report = run_signal_screen(waveform_root, args.feasibility_dir, args.work_dir, args.quality, args.workers, progress)
+            elif args.command == "vitals":
+                from .cohort import load_adult_metavision_stays
+                from .vitals import extract_vitals
+                stays, _ = load_adult_metavision_stays(clinical_root)
+                _, report = extract_vitals(clinical_root, stays, args.work_dir, progress)
+            else:
+                from .modeling import build_model_table, train_models
+                table, table_report = build_model_table(args.feasibility_dir, args.work_dir, args.work_dir / "model_table.sqlite", progress)
+                report = {"table": table_report, "models": train_models(table, args.work_dir / "models", progress)}
+            if args.output:
+                write_report(report, args.output, (clinical_root, waveform_root))
+                print(f"Aggregate report saved to {args.output.resolve()}")
+            else:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
         if args.command == "feasibility":
             from .feasibility import run_feasibility
 
@@ -89,6 +133,9 @@ def main(argv: list[str] | None = None) -> int:
         if report["warnings"]:
             print(f"Inventory has {len(report['warnings'])} warning(s); inspect the report", file=sys.stderr)
         return 0
+    except ModuleNotFoundError as exc:
+        print(f"Missing optional dependency {exc.name}; install the signal/model extras in your Python environment", file=sys.stderr)
+        return 2
     except (OSError, ValueError, KeyError, csv.Error) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 2

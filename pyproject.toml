@@ -4,11 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hrv-early-warning"
-version = "0.2.0"
+version = "0.3.0"
 description = "Data feasibility and temporal evaluation foundations for HRV early-warning research"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
+
+[project.optional-dependencies]
+signal = ["numpy>=2.2,<3", "scipy>=1.15,<2", "wfdb==4.3.0", "threadpoolctl>=3.6,<4"]
+model = ["numpy>=2.2,<3", "scipy>=1.15,<2", "pandas>=2.2,<3", "scikit-learn==1.6.1", "joblib>=1.5,<2"]
 
 [project.scripts]
 hrv-early-warning = "hrv_early_warning.cli:main"

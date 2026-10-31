@@ -1,0 +1,22 @@
+# Fixed engineering screen before real ECG inspection; not a clinical rhythm classifier.
+epoch_seconds = 300.0
+minimum_fs_hz = 100.0
+flat_difference_mv = 1e-07
+maximum_flat_seconds = 1.0
+amplitude_block_seconds = 10.0
+minimum_block_peak_to_peak_mv = 0.05
+maximum_peak_to_peak_mv = 10.0
+extrema_tolerance_mv = 1e-08
+maximum_extrema_plateau_seconds = 0.04
+match_tolerance_seconds = 0.1
+minimum_beat_agreement = 0.9
+agreement_block_seconds = 10.0
+minimum_block_beat_agreement = 0.8
+minimum_beats = 100
+maximum_edge_without_beat_seconds = 2.5
+minimum_rr_seconds = 0.3
+maximum_rr_seconds = 2.0
+rr_median_window = 11
+maximum_relative_rr_deviation = 0.2
+minimum_rr_valid_fraction = 0.95
+minimum_valid_rr_duration_fraction = 0.9

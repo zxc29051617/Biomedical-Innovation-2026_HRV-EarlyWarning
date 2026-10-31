@@ -1,6 +1,6 @@
 [study]
-version = "0.2.0"
-status = "feasibility_protocol_not_yet_frozen_for_model_evaluation"
+version = "0.3.0"
+status = "development_protocol_heldout_test_locked"
 title_zh = "重症患者循環風險預警：結合 HRV 趨勢與訊號品質評估"
 title_en = "HRV Trends and Signal Quality for Early Warning of Circulatory Risk in ICU Patients"
 primary_question = "Does adding past HRV and its trends improve prediction of first sustained vasopressor initiation over routine vital signs, at the same alarm burden?"
@@ -60,6 +60,25 @@ candidate_hrv = ["MeanNN", "SDNN", "RMSSD", "SD1SD2", "DFA_alpha1", "DFA_alpha2"
 feature_list_status = "Candidate list; duration requirements and missingness audited before development"
 quality_policy = "Report rhythm eligibility and signal quality separately from data availability; thresholds set using development data only"
 information_cutoff = "Use observations available by landmark, including STORETIME where relevant; no future imputation"
+
+[signal_screen]
+configuration = "configs/signal_quality.toml"
+algorithm = "rr_quality_v1"
+epoch_seconds = 300
+model_epoch_stride_minutes = 60
+model_sampling = "The last five minutes before each ICU-anchored hourly update; six hourly samples describe the past six hours, not six hours of continuous HRV"
+event_audit = "Additionally inspect consecutive nonoverlapping five-minute epochs in prespecified positive-landmark history windows; do not use this case subset for model fitting"
+rhythm_status = "Not classified; candidate RR features are not confirmed sinus NN-based HRV"
+nonlinear_features = "Deferred until duration and rhythm validity are established"
+
+[development_model]
+estimator = "LogisticRegression C=1, no class weighting; median imputation and scaling fit on training patients only"
+validation_fraction_of_development = 0.2
+current_rr_features = ["mean_rr_ms", "sdrr_ms", "rmssd_rr_ms"]
+history = "Current plus preceding five hourly RR samples; missing samples remain missing"
+comparison = "Paired models use the same current-epoch-quality-passing windows; report coverage against the full hourly risk set"
+evaluation_stage = "Development validation only; held-out test remains unopened"
+alarm_threshold = "99th percentile of fitted training-negative risk scores; fixed before validation, then apply six-hour per-ICU refractory period; achieved validation alarm burdens may differ"
 
 [validation]
 split_unit = "SUBJECT_ID"

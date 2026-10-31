@@ -10,6 +10,23 @@ from hrv_early_warning.cli import load_paths, main, write_report
 
 
 class CliTests(unittest.TestCase):
+    def test_signal_vitals_and_develop_refuse_private_outputs_in_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            clinical, waveform = root / "clinical", root / "waveform"
+            clinical.mkdir()
+            waveform.mkdir()
+            config = root / "paths.toml"
+            config.write_text('[data]\nclinical_root="clinical"\nwaveform_root="waveform"\n')
+            for command in ("signals", "vitals", "develop"):
+                for source in (clinical, waveform):
+                    error = io.StringIO()
+                    with self.subTest(command=command, source=source), contextlib.redirect_stderr(error):
+                        code = main([command, "--paths", str(config), "--work-dir", str(source / "cache")])
+                    self.assertEqual(code, 2)
+                    self.assertIn("Private work directory", error.getvalue())
+                    self.assertFalse((source / "cache").exists())
+
     def test_relative_data_paths_are_relative_to_config_not_cwd(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

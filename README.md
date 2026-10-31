@@ -8,9 +8,11 @@
 
 核心研究問題：**在相同誤報負擔下，HRV 與個人過去的變化，能否比心率、血壓等常規資訊更早辨識事件？** 模型預測的是給藥紀錄中的事件，不直接判定敗血性休克或治療必要性。
 
-目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件萃取、同次 ICU 波形配對，以及事件前 II 通道與資料檔存在性稽核。醫學與資料定義已整理成[附來源的證據審查](docs/clinical_evidence.md)。ECG 品質檢查、HRV 特徵、模型與展示介面仍待實作；目前沒有可宣稱的模型效能。
+目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件、同次 ICU 波形配對，並進入 ECG 解碼、工程品質篩選、候選 RR 特徵與開發模型階段。醫學與資料定義見[臨床證據審查](docs/clinical_evidence.md)，訊號規則見[訊號品質依據](docs/signal_quality_evidence.md)。工程品質通過不代表已確認正常心律或臨床 HRV；保留測試仍鎖定。
 
 2026-11-01 的 protocol 0.2 稽核：23,327 次成人 ICU、4,862 個首次事件；426 個事件有合法預測前 II 通道 metadata，其中 372 個至少有 3 小時、220 個有完整 6 小時覆蓋。這些是檔案存在性，尚不是品質合格的 HRV 樣本。完整排除原因與早期事件限制見[資料盤點](docs/data_inventory.md)。
+
+Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗。第一個生命徵象基準在開發驗證得到 AUROC 0.680、AUPRC 0.0267（陽性比例 0.00873）；目前門檻抓到 28／247 個可預警事件。全量 ECG 與 RR 配對比較仍在執行，結果及限制見 [M2 紀錄](docs/m2_results.md)，不能宣稱已證明 HRV 增益。
 
 ## 團隊
 
@@ -69,6 +71,27 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 需要安裝命令列入口時，可在自己的虛擬環境執行 `python -m pip install -e .`；初始工具不需要額外的執行期套件。
 
+## ECG 與開發模型
+
+訊號與模型需額外依賴，可在獨立環境執行 `python -m pip install -e '.[signal,model]'`。本次驗證環境為 Python 3.13.17、numpy 2.2.6、scipy 1.15.3、pandas 2.2.3、wfdb 4.3.0、scikit-learn 1.6.1。全量訊號處理可能需要數小時，逐批結果寫入 SQLite；同一 work directory 請只啟動一個訊號工作。
+
+```bash
+PYTHONPATH=src python -m hrv_early_warning vitals \
+  --paths configs/paths.local.toml --output reports/local/vitals.json
+PYTHONPATH=src python -m hrv_early_warning signals \
+  --paths configs/paths.local.toml --workers 8 --output reports/local/signals.json
+PYTHONPATH=src python -m hrv_early_warning develop \
+  --paths configs/paths.local.toml --output reports/local/development.json
+```
+
+也可指定已安裝依賴的 Python 後執行 `HRV_PYTHON=/path/to/python sh scripts/run_m2.sh`，依序完成生命徵象、訊號及開發模型。
+
+使用 `PYTHONPATH=src python -m hrv_early_warning status` 查詢進度。若訊號工作已另行啟動，`PYTHONPATH=src python scripts/finalize_m2.py` 可等待完整快取後接續建模；它不啟動另一份 ECG 工作，預設最多等候 24 小時。工作失敗會留下明確狀態，不能將等待程式仍在執行當成訊號工作成功。
+
+`signals` 使用官方 WFDB 解碼，不插補缺失 ECG。每小時採用更新前最後五分鐘，過去六小時以六個這樣的片段描述；事件前另做密集五分鐘覆蓋盤點，但模型不會混入這些依事件選取的額外片段。候選指標為 mean RR、SDRR 與 RMSSD of RR，尚未確認正常 NN 心搏、AF 或 pacing。
+
+`artifacts/m2/patient_split.json` 固定全體患者的訓練／驗證／保留測試歸屬，重跑不得因結果或 ECG 可用性換人。`develop` 只使用訓練與開發驗證；品質全量尚未完成時僅可建立生命徵象基準，HRV 比較維持待完成。患者時間、特徵、模型與快取留在忽略目錄；檢視報告中的完成狀態後再引用結果。
+
 ## 文件與實作位置
 
 - [研究計畫與驗收標準](docs/project_brief.md)
@@ -78,6 +101,7 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 - [臨床定義與官方資料來源審查](docs/clinical_evidence.md)
 - [近期里程碑](docs/roadmap.md)
 - [資料盤點證據](docs/data_inventory.md)
+- [M2 風險集合、訊號工作與開發基準](docs/m2_results.md)
 - [前作與來源](docs/references.md)
 - [機器可讀規格](configs/protocol.toml)
 - `src/hrv_early_warning/inventory.py`：可重跑的資料盤點。
@@ -85,5 +109,9 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 - `src/hrv_early_warning/cohort.py`、`vasopressors.py`：成人資格、輸注對齊、有效區間與首次事件。
 - `src/hrv_early_warning/waveforms.py`、`waveform_index.py`：master 時間、gap、II 通道與檔案存在性。
 - `src/hrv_early_warning/feasibility.py`：整合掃描、事件與 metadata 覆蓋報告。
+- `src/hrv_early_warning/risksets.py`：完整逐小時正／負／截尾風險集合及患者切分。
+- `src/hrv_early_warning/ecg.py`、`signal_quality.py`、`signal_pipeline.py`：解碼、工程篩選與可續跑結果。
+- `src/hrv_early_warning/vitals.py`：完整掃描生命徵象，保留測量與登錄時間。
+- `src/hrv_early_warning/modeling.py`：訓練患者擬合、驗證患者比較；保留測試鎖定。
 
 原始資料、患者層級產物、本機路徑設定及模型產物由 `.gitignore` 排除。此 repo 的初始實作為新寫程式，既有專案與論文的研究來源列於引用文件。
