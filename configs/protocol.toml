@@ -1,0 +1,78 @@
+[study]
+version = "0.1.0"
+status = "feasibility_protocol_not_yet_frozen_for_model_evaluation"
+title_zh = "重症患者循環風險預警：結合 HRV 趨勢與訊號品質評估"
+title_en = "HRV Trends and Signal Quality for Early Warning of Circulatory Risk in ICU Patients"
+primary_question = "Does adding past HRV and its trends improve prediction of first sustained vasopressor initiation over routine vital signs, at the same alarm burden?"
+intended_use = "Retrospective research and clinician review prototype"
+
+[cohort]
+clinical_dataset = "MIMIC-III v1.4"
+waveform_dataset = "MIMIC-III Waveform Database Matched Subset v1.0"
+minimum_age_years = 18
+icu_dbsource = "metavision"
+primary_population = "Adult MetaVision ICU patients; infection evidence is not an eligibility requirement in version 0.1"
+sepsis_subgroup = "Prespecified retrospective descriptive subgroup; discharge ICD codes never enter online eligibility or features"
+future_infection_extension = "Require both culture and antibiotic evidence to be available by landmark; never backdate eligibility using a future pair"
+waveform_match = "SUBJECT_ID plus overlap with the same ICUSTAY_ID time interval"
+icd_role = "Descriptive feasibility counts and retrospective subgroups only"
+
+[time]
+lookback_hours = 6
+landmark_step_hours = 1
+primary_horizon_hours = 6
+secondary_horizon_hours = [2]
+first_landmark = "At least 6 hours after ICU admission; quantify events excluded during these initial 6 hours"
+positive_interval = "(landmark, landmark + horizon]"
+incomplete_followup = "Censor if no observed event and discharge/death/data boundary precedes the horizon"
+
+[endpoint]
+name = "first_sustained_vasopressor_initiation_in_current_icu_stay"
+minimum_continuous_minutes = 60
+sensitivity_continuous_minutes = [30, 120]
+maximum_gap_minutes = 0
+continuous_exposure_rule = "Union of primary-drug infusion intervals; an uninterrupted switch between primary drugs counts, simultaneous exposure is not double-counted"
+positive_infusion_rate_required = true
+exclude_status_descriptions = ["Rewritten"]
+exclude_bolus = true
+first_use_scope = "Current ICU stay; prior or ongoing vasopressor infusion excludes subsequent landmarks"
+prior_exclusion_itemids = [221906, 221289, 222315, 221749, 221662]
+nonqualifying_first_use = "End risk follow-up at first exposure if it fails the primary-drug or sustained-duration condition; do not relabel a later restart as first use"
+is_septic_shock_definition = false
+
+[endpoint.primary_itemids]
+norepinephrine = 221906
+epinephrine = 221289
+vasopressin = 222315
+phenylephrine = 221749
+
+[endpoint.sensitivity_itemids]
+dopamine = 221662
+
+[features]
+epoch_minutes = 5
+comparisons = ["routine_vitals", "routine_vitals_plus_current_hrv", "routine_vitals_plus_hrv_history", "routine_vitals_plus_hrv_history_and_trends"]
+candidate_vitals = ["age", "heart_rate", "mean_arterial_pressure", "respiratory_rate", "spo2"]
+candidate_hrv = ["MeanNN", "SDNN", "RMSSD", "SD1SD2", "DFA_alpha1", "DFA_alpha2", "MSEn"]
+feature_list_status = "Candidate list; duration requirements and missingness audited before development"
+quality_policy = "Report rhythm eligibility and signal quality separately from data availability; thresholds set using development data only"
+information_cutoff = "Use observations available by landmark, including STORETIME where relevant; no future imputation"
+
+[validation]
+split_unit = "SUBJECT_ID"
+test_fraction = 0.2
+split_seed = 20261101
+preprocessing = "Fit imputation, scaling, selection, calibration and alarm thresholds within development folds only"
+primary_metrics = ["AUPRC", "event_sensitivity", "false_alarms_per_100_patient_hours", "lead_time", "Brier_score", "coverage"]
+secondary_metrics = ["AUROC", "calibration_curve", "performance_by_subgroup"]
+confidence_intervals = "Patient-level bootstrap"
+alarm_refractory_hours = 6
+test_policy = "Freeze cohort protocol and all modeling decisions before opening patient-held-out results"
+external_validation_status = "Not available for the HRV model in the mounted MIMIC-IV clinical archive"
+
+[milestones]
+data_feasibility = "2026-11-07"
+feature_and_baseline_pipeline = "2026-11-14"
+locked_evaluation_and_demo = "2026-11-21"
+submission_materials = "2026-11-28"
+submission_buffer = "2026-11-29"

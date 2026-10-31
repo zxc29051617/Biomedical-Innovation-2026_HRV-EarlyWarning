@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hrv-early-warning"
+version = "0.1.0"
+description = "Data feasibility and temporal evaluation foundations for HRV early-warning research"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+hrv-early-warning = "hrv_early_warning.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

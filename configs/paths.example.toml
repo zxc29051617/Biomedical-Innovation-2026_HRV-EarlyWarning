@@ -1,0 +1,4 @@
+[data]
+# Copy to paths.local.toml and set the existing read-only mounted directories.
+clinical_root = "/path/to/mimic-iii-clinical-database-1.4"
+waveform_root = "/path/to/mimic3wdb-matched-v1.0"
