@@ -38,7 +38,7 @@ class ManagedSignalTests(unittest.TestCase):
     def status(self):
         return json.loads((self.work / "signal_job_status.json").read_text())
 
-    def fake_run(self, outcomes, complete=True, on_start=None):
+    def fake_run(self, outcomes, complete=True, on_start=None, **run_options):
         calls, counter = [], [5]
 
         def popen(command, **kwargs):
@@ -69,7 +69,7 @@ class ManagedSignalTests(unittest.TestCase):
             stack.enter_context(patch.object(managed, "oom_kills", side_effect=lambda: counter[0]))
             stack.enter_context(patch.object(managed, "stop_process_group", side_effect=cleanup))
             stack.enter_context(patch.object(managed, "pipeline_status", return_value={"signals": {"status": "complete" if complete else "incomplete"}}))
-            code = managed.run_managed(self.paths, self.work, self.feasibility)
+            code = managed.run_managed(self.paths, self.work, self.feasibility, **run_options)
         return code, calls
 
     def test_retry_classifier_requires_worker_loss_and_new_oom_evidence(self):
@@ -101,6 +101,31 @@ class ManagedSignalTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(self.status()["state"], "failed")
         self.assertEqual(self.status()["reason"], "nonretryable_child_failure")
+
+    def test_bounded_engine_command_inherits_mutex_and_halves_workers_on_oom(self):
+        for initial, expected in ((8, ["8", "4", "2"]), (4, ["4", "2", "1"])):
+            with self.subTest(initial=initial):
+                code, calls = self.fake_run([(1, True, "BrokenProcessPool\n")] * 3,
+                                           engine="bounded-spawn", workers=initial)
+                self.assertEqual(code, 2)
+                self.assertEqual([command[command.index("--workers") + 1] for command, _ in calls], expected)
+                for command, kwargs in calls:
+                    self.assertIn("hrv_early_warning.signal_runtime", command)
+                    fd = int(command[command.index("--inherited-lock-fd") + 1])
+                    self.assertEqual(fd, kwargs["pass_fds"][1])
+                self.assertEqual(self.status()["engine"], "bounded-spawn")
+
+    def test_legacy_remains_default_and_rejects_more_than_two_workers(self):
+        code, calls = self.fake_run([(0, False, "")])
+        self.assertEqual(code, 0)
+        self.assertIn("hrv_early_warning", calls[0][0])
+        self.assertNotIn("--inherited-lock-fd", calls[0][0])
+        self.assertEqual(self.status()["engine"], "legacy")
+        with patch.object(managed.subprocess, "Popen") as child:
+            for workers, engine in ((4, "legacy"), (9, "bounded-spawn"), (0, "bounded-spawn")):
+                with self.subTest(workers=workers, engine=engine), self.assertRaises(ValueError):
+                    managed.run_managed(self.paths, self.work, self.feasibility, workers=workers, engine=engine)
+            child.assert_not_called()
 
     def test_success_requires_complete_cache_and_can_follow_oom_retry(self):
         code, calls = self.fake_run([(1, True, "BrokenProcessPool\n"), (0, False, "complete\n")])

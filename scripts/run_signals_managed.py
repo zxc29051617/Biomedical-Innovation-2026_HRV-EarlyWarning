@@ -27,6 +27,7 @@ POLL_SECONDS = 1
 STOP_GRACE_SECONDS = 10
 WORK_FILES = ("signal_job.lock", "signal_job_status.json", "signal_job.log", "signal_stop_request.json",
               "signals.json", "signal_summary.json", "signal_plan.json", "patient_split.json",
+              "signal_execution.json", "signal_execution.json.tmp",
               "epochs.sqlite", "epochs.sqlite-journal", "epochs.sqlite-wal", "epochs.sqlite-shm")
 
 
@@ -201,9 +202,12 @@ def atomic_status(path, payload, roots):
             temporary.unlink(missing_ok=True)
 
 
-def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3):
-    if isinstance(workers, bool) or not isinstance(workers, int) or workers not in (1, 2):
-        raise ValueError("workers_must_be_one_or_two")
+def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3, engine="legacy"):
+    if engine not in ("legacy", "bounded-spawn"):
+        raise ValueError("unknown_signal_execution_engine")
+    maximum_workers = 2 if engine == "legacy" else 8
+    if isinstance(workers, bool) or not isinstance(workers, int) or not 1 <= workers <= maximum_workers:
+        raise ValueError("workers_outside_execution_engine_range")
     if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or not 1 <= max_attempts <= 3:
         raise ValueError("max_attempts_must_be_one_to_three")
     roots = load_paths(Path(paths))
@@ -222,7 +226,7 @@ def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3):
             raise ValueError("existing_stop_request_refuses_start")
         status_path, log_path = work / "signal_job_status.json", work / "signal_job.log"
         started = utc_now()
-        state = {"started_utc": started, "runner_pid": os.getpid(), "attempt": 0, "workers": workers}
+        state = {"started_utc": started, "runner_pid": os.getpid(), "attempt": 0, "workers": workers, "engine": engine}
         requested_signal = []
         prior_handlers = {}
         process = None
@@ -269,6 +273,8 @@ def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3):
             update("starting")
             for attempt in range(1, max_attempts + 1):
                 state.update(attempt=attempt, workers=workers, attempt_started_utc=utc_now())
+                for old_field in ("cli_pid", "supervisor_pid", "child_returncode", "next_workers", "reason"):
+                    state.pop(old_field, None)
                 if stopping():
                     update("stopped", reason="stop_requested_before_child_start")
                     return 130
@@ -277,8 +283,12 @@ def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3):
                 env.update(OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1")
                 source_dir = str(Path(__file__).resolve().parents[1] / "src")
                 env["PYTHONPATH"] = source_dir + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
-                command = [sys.executable, "-u", "-m", "hrv_early_warning", "signals",
-                           "--paths", str(Path(paths).resolve()), "--work-dir", str(work),
+                command = [sys.executable, "-u", "-m"]
+                if engine == "bounded-spawn":
+                    command += ["hrv_early_warning.signal_runtime", "--inherited-lock-fd", str(lock_fd)]
+                else:
+                    command += ["hrv_early_warning", "signals"]
+                command += ["--paths", str(Path(paths).resolve()), "--work-dir", str(work),
                            "--feasibility-dir", str(feasibility), "--workers", str(workers),
                            "--output", str(work / "signals.json")]
                 protected_paths((work / name for name in WORK_FILES), roots)
@@ -334,7 +344,7 @@ def run_managed(paths, work_dir, feasibility_dir, workers=2, max_attempts=3):
                 if not retry or attempt == max_attempts:
                     update("failed", reason="oom_retry_limit" if retry else "nonretryable_child_failure", child_returncode=code)
                     return 2
-                workers = 1
+                workers = max(1, workers // 2)
                 update("retrying", reason="oom_worker_loss", child_returncode=code, next_workers=workers)
                 os.close(group_read)
                 group_read = None
@@ -368,11 +378,12 @@ def main(argv=None):
     parser.add_argument("--paths", type=Path, default=Path("configs/paths.local.toml"))
     parser.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
     parser.add_argument("--feasibility-dir", type=Path, default=Path("artifacts/feasibility"))
-    parser.add_argument("--workers", type=int, choices=(1, 2), default=2)
+    parser.add_argument("--engine", choices=("legacy", "bounded-spawn"), default="legacy")
+    parser.add_argument("--workers", type=int, choices=range(1, 9), default=2)
     parser.add_argument("--max-attempts", type=int, choices=(1, 2, 3), default=3)
     args = parser.parse_args(argv)
     try:
-        return run_managed(args.paths, args.work_dir, args.feasibility_dir, args.workers, args.max_attempts)
+        return run_managed(args.paths, args.work_dir, args.feasibility_dir, args.workers, args.max_attempts, args.engine)
     except (OSError, ValueError, RuntimeError) as error:
         # Do not echo source contents or raw errors containing patient paths.
         print("Managed signal job refused or failed: " + type(error).__name__, file=sys.stderr)

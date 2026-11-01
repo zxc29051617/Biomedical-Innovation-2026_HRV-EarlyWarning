@@ -78,3 +78,11 @@
 v2 若變更偵測位置、規則或依賴套件，須保存 v1、記錄新版本與驗證依據，使用新的快取目錄，並在相同患者切分下重新計算。全量覆蓋、拒絕原因與有效 RR 時間仍需完整報告；保留測試維持封存，不用於選定位方法或門檻。
 
 候選定位方法另須檢查正／反向及雙相波形、寬 QRS、雜訊、重複峰值、索引順序、位移上限和片段邊界。本地 WFDB 4.3.0 的 `correct_peaks` 邊界探測中，30 點陣列在 index 2 放單一脈衝，`search_radius=5`、`smooth_window_size=3`、`peak_dir='up'` 會回傳 −4；脈衝放在 index 29 則回傳 24。[相同版本的 peaks 原始碼](https://github.com/MIT-LCP/wfdb-python/blob/v4.3.0/wfdb/processing/peaks.py)亦須配合檢視。這是候選方法的合成邊界問題，本輪 v1 未使用該函式。後續不得以預測時刻之後的訊號補邊界，亦不得把通過這些工程測試當成正常心律標註。
+
+## 執行記憶體調整與結果等價核對
+
+全量工作遇到 OOM 後，新增 [signal_runtime.py](../src/hrv_early_warning/signal_runtime.py) 作為可選的 `bounded-spawn` 執行器。改變的是程序啟動及工作傳遞：每批只傳該 ICU 的 records 與最多 24 個片段，最多保留兩倍程序數的待完成工作，完成即寫入快取並釋放結果。規劃、逐片段 worker 與統計直接呼叫原 `signal_pipeline.py` 的凍結函式；`ecg.py`、`signal_quality.py`、`signal_pipeline.py` 及品質參數均未修改。
+
+合成整合測試核對計畫、每列 SQLite 結果、原指紋及彙總相同（執行時間與新增執行來源欄位除外）。另將上節同六個固定訓練片段送入新 worker，完整列 **6／6 精確重現**，不重新選樣或調門檻。兩個測試 worker 的最大量測 RSS 約 148 MiB，最大單批序列化 metadata 約 586 kB；這只是六例量測，不包含全計畫父程序、長跑快取或最壞 ICU，不能作為全量記憶體上限保證。
+
+新執行器保留原資料／演算法指紋，另在 SQLite metadata 凍結 `bounded_spawn_fingerprint`，記錄執行器及 worker wrapper 的程式雜湊；首次沿用舊快取的片段數與政策保存在 `bounded_spawn_migration`。`signal_execution.json` 保存各次程序數與前後片段數，完成彙總納入執行來源及其雜湊，再由模型來源指紋追溯。修改新執行器會拒絕直接續跑，須另建快取或明確審查遷移。這次調整沒有修正前述搏動定位問題，亦沒有增加臨床 HRV 的有效性證據。

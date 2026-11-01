@@ -83,7 +83,7 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 PYTHONPATH=src python -m hrv_early_warning vitals \
   --paths configs/paths.local.toml --output reports/local/vitals.json
 PYTHONPATH=src python scripts/run_signals_managed.py \
-  --paths configs/paths.local.toml --workers 2
+  --paths configs/paths.local.toml --engine bounded-spawn --workers 4
 PYTHONPATH=src python -m hrv_early_warning develop \
   --paths configs/paths.local.toml --output reports/local/development.json
 PYTHONPATH=src python -m hrv_early_warning compare \
@@ -99,6 +99,8 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 使用 `PYTHONPATH=src python -m hrv_early_warning status` 查詢進度。若訊號工作已另行啟動，`PYTHONPATH=src python scripts/finalize_m2.py` 可等待完整快取後接續建模；它不啟動另一份 ECG 工作，預設最多等候 24 小時。工作失敗會留下明確狀態，不能將等待程式仍在執行當成訊號工作成功。
 
 本機全量執行曾因記憶體不足而中斷，已提交片段均保留。`run_signals_managed.py` 預設使用兩個工作程序，持有同目錄鎖，將輸出直接追加至 `artifacts/m2/signal_job.log`，每 30 秒更新 `signal_job_status.json`。只有工作程序異常終止且同次執行出現新的 OOM 紀錄，才降為單程序續跑；最多三次嘗試，不改品質規則、特徵或快取指紋。其他錯誤會明確停止，完整快取通過核對後才標示完成。
+
+上列指令選用 `bounded-spawn` 執行器：每批只傳一個 ICU 的波形中繼資料及最多 24 個片段，待處理工作上限為程序數的兩倍，避免每個程序持有整份隊列資料。它呼叫相同的凍結規劃、訊號 worker 與彙總函式；六個固定真實訓練片段的完整結果與原快取 6／6 精確相同。另保存執行器程式指紋及遷移紀錄，程式變更會拒絕直接沿用；相容性與限制見[訊號品質證據](docs/signal_quality_evidence.md)。此模式發生已確認的 OOM 工作程序失敗時，每次將程序數減半，四程序最多嘗試 `4 → 2 → 1`。管理器未指定 `--engine` 時仍保留舊執行器的兩程序預設。
 
 若需停止，可將 `{"action":"stop"}` 存為 `artifacts/m2/signal_stop_request.json`；管理程序會清理子程序群組並保留請求檔。恢復時移除此請求檔，再執行相同命令即可沿用快取。意外終止可能留下最後一次狀態，因此應搭配 `updated_utc` 心跳及完整片段數判讀，不把過期的 `running` 當成仍在執行。
 
