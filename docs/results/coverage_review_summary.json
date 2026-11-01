@@ -1,0 +1,1398 @@
+{
+  "schema_version": "development_hourly_coverage_review_v1",
+  "scope": "train_validation_hourly_riskset_only_test_features_unopened",
+  "cohort": {
+    "train": {
+      "adult_patients_before_risk_time_exclusions": 11188,
+      "adult_icus_before_risk_time_exclusions": 14928,
+      "qualifying_events_before_six_hour_rule": 3093,
+      "icus_with_any_matched_waveform_metadata": 4758
+    },
+    "validation": {
+      "adult_patients_before_risk_time_exclusions": 2798,
+      "adult_icus_before_risk_time_exclusions": 3752,
+      "qualifying_events_before_six_hour_rule": 769,
+      "icus_with_any_matched_waveform_metadata": 1225
+    },
+    "development": {
+      "adult_patients_before_risk_time_exclusions": 13986,
+      "adult_icus_before_risk_time_exclusions": 18680,
+      "qualifying_events_before_six_hour_rule": 3862,
+      "icus_with_any_matched_waveform_metadata": 5983
+    }
+  },
+  "coverage": {
+    "train": {
+      "stages": {
+        "all_risk_windows": {
+          "patients": 9084,
+          "icus": 11772,
+          "events_with_at_least_one_positive_window": 975,
+          "event_patients": 936,
+          "windows": 658305,
+          "labels": {
+            "positive": 4836,
+            "negative": 589358,
+            "censored": 64111
+          },
+          "binary_patients": 8923,
+          "binary_windows": 594194,
+          "observed_patient_hours_including_censored": 652384.1458333334,
+          "binary_evaluable_patient_hours": 593702.9108333334,
+          "positive_fraction_of_binary_windows": 0.008138756029175657,
+          "coverage_fraction": {
+            "patients": 1.0,
+            "icus": 1.0,
+            "events_with_at_least_one_positive_window": 1.0,
+            "windows": 1.0,
+            "observed_patient_hours_including_censored": 1.0
+          }
+        },
+        "current_epoch_planned": {
+          "patients": 3084,
+          "icus": 3556,
+          "events_with_at_least_one_positive_window": 243,
+          "event_patients": 240,
+          "windows": 181041,
+          "labels": {
+            "positive": 1141,
+            "negative": 163488,
+            "censored": 16412
+          },
+          "binary_patients": 3025,
+          "binary_windows": 164629,
+          "observed_patient_hours_including_censored": 179984.3097222222,
+          "binary_evaluable_patient_hours": 164514.145,
+          "positive_fraction_of_binary_windows": 0.006930735168165997,
+          "coverage_fraction": {
+            "patients": 0.3394980184940555,
+            "icus": 0.30207271491675164,
+            "events_with_at_least_one_positive_window": 0.24923076923076923,
+            "windows": 0.27501082325062093,
+            "observed_patient_hours_including_censored": 0.27588700748133044
+          }
+        },
+        "current_decoded_ok_or_partial": {
+          "patients": 3045,
+          "icus": 3509,
+          "events_with_at_least_one_positive_window": 235,
+          "event_patients": 232,
+          "windows": 169875,
+          "labels": {
+            "positive": 1090,
+            "negative": 153425,
+            "censored": 15360
+          },
+          "binary_patients": 2984,
+          "binary_windows": 154515,
+          "observed_patient_hours_including_censored": 168916.96694444446,
+          "binary_evaluable_patient_hours": 154406.9463888889,
+          "positive_fraction_of_binary_windows": 0.007054331294696308,
+          "coverage_fraction": {
+            "patients": 0.3352047556142668,
+            "icus": 0.29808019028202515,
+            "events_with_at_least_one_positive_window": 0.24102564102564103,
+            "windows": 0.258049080593342,
+            "observed_patient_hours_including_censored": 0.2589225504992548
+          }
+        },
+        "current_rr_accepted": {
+          "patients": 2501,
+          "icus": 2846,
+          "events_with_at_least_one_positive_window": 152,
+          "event_patients": 151,
+          "windows": 76970,
+          "labels": {
+            "positive": 480,
+            "negative": 70153,
+            "censored": 6337
+          },
+          "binary_patients": 2419,
+          "binary_windows": 70633,
+          "observed_patient_hours_including_censored": 76636.34722222222,
+          "binary_evaluable_patient_hours": 70586.76777777777,
+          "positive_fraction_of_binary_windows": 0.006795690399671542,
+          "coverage_fraction": {
+            "patients": 0.27531924262439456,
+            "icus": 0.2417601087325858,
+            "events_with_at_least_one_positive_window": 0.1558974358974359,
+            "windows": 0.11692148776023271,
+            "observed_patient_hours_including_censored": 0.11747119808426605
+          }
+        },
+        "history_at_least_3_of_6": {
+          "patients": 2246,
+          "icus": 2547,
+          "events_with_at_least_one_positive_window": 130,
+          "event_patients": 130,
+          "windows": 90164,
+          "labels": {
+            "positive": 593,
+            "negative": 81612,
+            "censored": 7959
+          },
+          "binary_patients": 2169,
+          "binary_windows": 82205,
+          "observed_patient_hours_including_censored": 89470.21444444444,
+          "binary_evaluable_patient_hours": 82154.09055555555,
+          "positive_fraction_of_binary_windows": 0.007213673134237577,
+          "coverage_fraction": {
+            "patients": 0.2472479084103919,
+            "icus": 0.21636085626911314,
+            "events_with_at_least_one_positive_window": 0.13333333333333333,
+            "windows": 0.13696386933108515,
+            "observed_patient_hours_including_censored": 0.1371434530036873
+          }
+        },
+        "history_all_6_of_6": {
+          "patients": 1447,
+          "icus": 1579,
+          "events_with_at_least_one_positive_window": 40,
+          "event_patients": 40,
+          "windows": 22287,
+          "labels": {
+            "positive": 124,
+            "negative": 20682,
+            "censored": 1481
+          },
+          "binary_patients": 1371,
+          "binary_windows": 20806,
+          "observed_patient_hours_including_censored": 22213.77,
+          "binary_evaluable_patient_hours": 20798.006666666668,
+          "positive_fraction_of_binary_windows": 0.005959819282899164,
+          "coverage_fraction": {
+            "patients": 0.15929106120651695,
+            "icus": 0.13413183826027864,
+            "events_with_at_least_one_positive_window": 0.041025641025641026,
+            "windows": 0.033855127942215235,
+            "observed_patient_hours_including_censored": 0.034050137701652584
+          }
+        },
+        "current_and_history_at_least_3_of_6": {
+          "patients": 2234,
+          "icus": 2530,
+          "events_with_at_least_one_positive_window": 120,
+          "event_patients": 120,
+          "windows": 67556,
+          "labels": {
+            "positive": 408,
+            "negative": 61753,
+            "censored": 5395
+          },
+          "binary_patients": 2154,
+          "binary_windows": 62161,
+          "observed_patient_hours_including_censored": 67274.44666666667,
+          "binary_evaluable_patient_hours": 62125.68305555556,
+          "positive_fraction_of_binary_windows": 0.00656360097167034,
+          "coverage_fraction": {
+            "patients": 0.24592690444738,
+            "icus": 0.2149167516139993,
+            "events_with_at_least_one_positive_window": 0.12307692307692308,
+            "windows": 0.1026211254661593,
+            "observed_patient_hours_including_censored": 0.10312090981415953
+          }
+        },
+        "current_and_history_all_6_of_6": {
+          "patients": 1447,
+          "icus": 1579,
+          "events_with_at_least_one_positive_window": 40,
+          "event_patients": 40,
+          "windows": 22287,
+          "labels": {
+            "positive": 124,
+            "negative": 20682,
+            "censored": 1481
+          },
+          "binary_patients": 1371,
+          "binary_windows": 20806,
+          "observed_patient_hours_including_censored": 22213.77,
+          "binary_evaluable_patient_hours": 20798.006666666668,
+          "positive_fraction_of_binary_windows": 0.005959819282899164,
+          "coverage_fraction": {
+            "patients": 0.15929106120651695,
+            "icus": 0.13413183826027864,
+            "events_with_at_least_one_positive_window": 0.041025641025641026,
+            "windows": 0.033855127942215235,
+            "observed_patient_hours_including_censored": 0.034050137701652584
+          }
+        }
+      },
+      "mutually_exclusive_current_status": {
+        "no_current_epoch_planned": {
+          "patients": 8063,
+          "icus": 10174,
+          "events_with_at_least_one_positive_window": 781,
+          "event_patients": 759,
+          "windows": 477264,
+          "labels": {
+            "positive": 3695,
+            "negative": 425870,
+            "censored": 47699
+          },
+          "binary_patients": 7494,
+          "binary_windows": 429565,
+          "observed_patient_hours_including_censored": 472399.8361111111,
+          "binary_evaluable_patient_hours": 429188.7658333333,
+          "positive_fraction_of_binary_windows": 0.008601725000872976
+        },
+        "current_decode_unavailable": {
+          "patients": 1053,
+          "icus": 1108,
+          "events_with_at_least_one_positive_window": 25,
+          "event_patients": 25,
+          "windows": 11166,
+          "labels": {
+            "positive": 51,
+            "negative": 10063,
+            "censored": 1052
+          },
+          "binary_patients": 904,
+          "binary_windows": 10114,
+          "observed_patient_hours_including_censored": 11067.342777777778,
+          "binary_evaluable_patient_hours": 10107.198611111111,
+          "positive_fraction_of_binary_windows": 0.005042515325291675
+        },
+        "current_decoded_engineering_rejected": {
+          "patients": 2994,
+          "icus": 3448,
+          "events_with_at_least_one_positive_window": 198,
+          "event_patients": 195,
+          "windows": 92905,
+          "labels": {
+            "positive": 610,
+            "negative": 83272,
+            "censored": 9023
+          },
+          "binary_patients": 2902,
+          "binary_windows": 83882,
+          "observed_patient_hours_including_censored": 92280.61972222223,
+          "binary_evaluable_patient_hours": 83820.17861111111,
+          "positive_fraction_of_binary_windows": 0.007272120359552705
+        },
+        "current_rr_accepted": {
+          "patients": 2501,
+          "icus": 2846,
+          "events_with_at_least_one_positive_window": 152,
+          "event_patients": 151,
+          "windows": 76970,
+          "labels": {
+            "positive": 480,
+            "negative": 70153,
+            "censored": 6337
+          },
+          "binary_patients": 2419,
+          "binary_windows": 70633,
+          "observed_patient_hours_including_censored": 76636.34722222222,
+          "binary_evaluable_patient_hours": 70586.76777777777,
+          "positive_fraction_of_binary_windows": 0.006795690399671542
+        }
+      },
+      "hourly_history_valid_count_distribution": {
+        "0": 534729,
+        "1": 16458,
+        "2": 16954,
+        "3": 18937,
+        "4": 22570,
+        "5": 26370,
+        "6": 22287
+      },
+      "rejection_reason_window_counts_nonexclusive": {
+        "detector_error": 35,
+        "ecg_decode_unavailable": 11166,
+        "excessive_amplitude_range": 4,
+        "flat_run": 2533,
+        "incomplete_beat_span": 58,
+        "insufficient_adjacent_rr_intervals": 3327,
+        "insufficient_valid_rr_duration": 22442,
+        "low_beat_agreement": 6971,
+        "low_block_amplitude": 923,
+        "low_block_beat_agreement": 13519,
+        "nonfinite_samples": 30900,
+        "suspected_clipping": 30608,
+        "too_few_beats": 55,
+        "too_many_screened_rr_intervals": 28946
+      },
+      "decode_error_window_counts_nonexclusive_including_warnings": {
+        "incompatible_sample_grids": 143,
+        "lead_ii_absent": 9988,
+        "no_decodable_lead_ii": 10801,
+        "overlapping_signal_conflict": 550
+      },
+      "decode_status_window_counts": {
+        "not_planned": 477264,
+        "ok": 138975,
+        "partial": 30900,
+        "rejected": 143,
+        "unavailable": 11023
+      },
+      "descriptive_age_strata": {
+        "18_44": {
+          "all": {
+            "patients": 1447,
+            "icus": 1862,
+            "events_with_at_least_one_positive_window": 87,
+            "event_patients": 86,
+            "windows": 108609,
+            "labels": {
+              "positive": 418,
+              "negative": 97623,
+              "censored": 10568
+            },
+            "binary_patients": 1421,
+            "binary_windows": 98041,
+            "observed_patient_hours_including_censored": 107663.50277777777,
+            "binary_evaluable_patient_hours": 97992.57416666667,
+            "positive_fraction_of_binary_windows": 0.004263522403892249
+          },
+          "current_rr_accepted": {
+            "patients": 410,
+            "icus": 464,
+            "events_with_at_least_one_positive_window": 14,
+            "event_patients": 14,
+            "windows": 15945,
+            "labels": {
+              "positive": 49,
+              "negative": 14625,
+              "censored": 1271
+            },
+            "binary_patients": 394,
+            "binary_windows": 14674,
+            "observed_patient_hours_including_censored": 15886.948333333334,
+            "binary_evaluable_patient_hours": 14668.844166666666,
+            "positive_fraction_of_binary_windows": 0.003339239471173504
+          }
+        },
+        "45_64": {
+          "all": {
+            "patients": 3110,
+            "icus": 4080,
+            "events_with_at_least_one_positive_window": 379,
+            "event_patients": 364,
+            "windows": 233948,
+            "labels": {
+              "positive": 1891,
+              "negative": 210047,
+              "censored": 22010
+            },
+            "binary_patients": 3069,
+            "binary_windows": 211938,
+            "observed_patient_hours_including_censored": 231878.90555555557,
+            "binary_evaluable_patient_hours": 211744.44,
+            "positive_fraction_of_binary_windows": 0.008922420707942889
+          },
+          "current_rr_accepted": {
+            "patients": 971,
+            "icus": 1128,
+            "events_with_at_least_one_positive_window": 73,
+            "event_patients": 72,
+            "windows": 32500,
+            "labels": {
+              "positive": 255,
+              "negative": 29557,
+              "censored": 2688
+            },
+            "binary_patients": 946,
+            "binary_windows": 29812,
+            "observed_patient_hours_including_censored": 32344.856111111112,
+            "binary_evaluable_patient_hours": 29785.532222222224,
+            "positive_fraction_of_binary_windows": 0.008553602576143834
+          }
+        },
+        "65_89": {
+          "all": {
+            "patients": 4034,
+            "icus": 5167,
+            "events_with_at_least_one_positive_window": 481,
+            "event_patients": 460,
+            "windows": 283586,
+            "labels": {
+              "positive": 2386,
+              "negative": 253430,
+              "censored": 27770
+            },
+            "binary_patients": 3950,
+            "binary_windows": 255816,
+            "observed_patient_hours_including_censored": 281005.8416666667,
+            "binary_evaluable_patient_hours": 255581.1197222222,
+            "positive_fraction_of_binary_windows": 0.009327016292960566
+          },
+          "current_rr_accepted": {
+            "patients": 1020,
+            "icus": 1140,
+            "events_with_at_least_one_positive_window": 63,
+            "event_patients": 63,
+            "windows": 26456,
+            "labels": {
+              "positive": 174,
+              "negative": 24124,
+              "censored": 2158
+            },
+            "binary_patients": 985,
+            "binary_windows": 24298,
+            "observed_patient_hours_including_censored": 26345.601944444443,
+            "binary_evaluable_patient_hours": 24283.39138888889,
+            "positive_fraction_of_binary_windows": 0.007161083216725656
+          }
+        },
+        "age_obscured_over_89": {
+          "all": {
+            "patients": 529,
+            "icus": 663,
+            "events_with_at_least_one_positive_window": 28,
+            "event_patients": 27,
+            "windows": 32162,
+            "labels": {
+              "positive": 141,
+              "negative": 28258,
+              "censored": 3763
+            },
+            "binary_patients": 519,
+            "binary_windows": 28399,
+            "observed_patient_hours_including_censored": 31835.895833333332,
+            "binary_evaluable_patient_hours": 28384.776944444446,
+            "positive_fraction_of_binary_windows": 0.004964963555054756
+          },
+          "current_rr_accepted": {
+            "patients": 105,
+            "icus": 114,
+            "events_with_at_least_one_positive_window": 2,
+            "event_patients": 2,
+            "windows": 2069,
+            "labels": {
+              "positive": 2,
+              "negative": 1847,
+              "censored": 220
+            },
+            "binary_patients": 99,
+            "binary_windows": 1849,
+            "observed_patient_hours_including_censored": 2058.9408333333336,
+            "binary_evaluable_patient_hours": 1849.0,
+            "positive_fraction_of_binary_windows": 0.001081665765278529
+          }
+        }
+      }
+    },
+    "validation": {
+      "stages": {
+        "all_risk_windows": {
+          "patients": 2282,
+          "icus": 2975,
+          "events_with_at_least_one_positive_window": 247,
+          "event_patients": 240,
+          "windows": 155849,
+          "labels": {
+            "positive": 1219,
+            "negative": 138457,
+            "censored": 16173
+          },
+          "binary_patients": 2237,
+          "binary_windows": 139676,
+          "observed_patient_hours_including_censored": 154368.02055555556,
+          "binary_evaluable_patient_hours": 139549.0511111111,
+          "positive_fraction_of_binary_windows": 0.008727340416392221,
+          "coverage_fraction": {
+            "patients": 1.0,
+            "icus": 1.0,
+            "events_with_at_least_one_positive_window": 1.0,
+            "windows": 1.0,
+            "observed_patient_hours_including_censored": 1.0
+          }
+        },
+        "current_epoch_planned": {
+          "patients": 804,
+          "icus": 937,
+          "events_with_at_least_one_positive_window": 72,
+          "event_patients": 72,
+          "windows": 44259,
+          "labels": {
+            "positive": 313,
+            "negative": 39599,
+            "censored": 4347
+          },
+          "binary_patients": 787,
+          "binary_windows": 39912,
+          "observed_patient_hours_including_censored": 43988.255277777775,
+          "binary_evaluable_patient_hours": 39874.583333333336,
+          "positive_fraction_of_binary_windows": 0.007842252956504309,
+          "coverage_fraction": {
+            "patients": 0.3523225241016652,
+            "icus": 0.31495798319327734,
+            "events_with_at_least_one_positive_window": 0.291497975708502,
+            "windows": 0.28398642275535935,
+            "observed_patient_hours_including_censored": 0.2849570469289449
+          }
+        },
+        "current_decoded_ok_or_partial": {
+          "patients": 798,
+          "icus": 927,
+          "events_with_at_least_one_positive_window": 68,
+          "event_patients": 68,
+          "windows": 41419,
+          "labels": {
+            "positive": 292,
+            "negative": 37016,
+            "censored": 4111
+          },
+          "binary_patients": 782,
+          "binary_windows": 37308,
+          "observed_patient_hours_including_censored": 41171.73694444444,
+          "binary_evaluable_patient_hours": 37272.566666666666,
+          "positive_fraction_of_binary_windows": 0.007826739573281869,
+          "coverage_fraction": {
+            "patients": 0.3496932515337423,
+            "icus": 0.31159663865546217,
+            "events_with_at_least_one_positive_window": 0.27530364372469635,
+            "windows": 0.26576365584636413,
+            "observed_patient_hours_including_censored": 0.26671156886168096
+          }
+        },
+        "current_rr_accepted": {
+          "patients": 649,
+          "icus": 738,
+          "events_with_at_least_one_positive_window": 41,
+          "event_patients": 41,
+          "windows": 18025,
+          "labels": {
+            "positive": 121,
+            "negative": 16154,
+            "censored": 1750
+          },
+          "binary_patients": 630,
+          "binary_windows": 16275,
+          "observed_patient_hours_including_censored": 17942.87222222222,
+          "binary_evaluable_patient_hours": 16262.616944444444,
+          "positive_fraction_of_binary_windows": 0.007434715821812596,
+          "coverage_fraction": {
+            "patients": 0.28439964943032425,
+            "icus": 0.2480672268907563,
+            "events_with_at_least_one_positive_window": 0.1659919028340081,
+            "windows": 0.11565682166712651,
+            "observed_patient_hours_including_censored": 0.11623438687396237
+          }
+        },
+        "history_at_least_3_of_6": {
+          "patients": 590,
+          "icus": 668,
+          "events_with_at_least_one_positive_window": 36,
+          "event_patients": 36,
+          "windows": 21060,
+          "labels": {
+            "positive": 152,
+            "negative": 18698,
+            "censored": 2210
+          },
+          "binary_patients": 580,
+          "binary_windows": 18850,
+          "observed_patient_hours_including_censored": 20882.455833333333,
+          "binary_evaluable_patient_hours": 18835.3475,
+          "positive_fraction_of_binary_windows": 0.00806366047745358,
+          "coverage_fraction": {
+            "patients": 0.25854513584574934,
+            "icus": 0.22453781512605042,
+            "events_with_at_least_one_positive_window": 0.145748987854251,
+            "windows": 0.1351307996843098,
+            "observed_patient_hours_including_censored": 0.13527708496992705
+          }
+        },
+        "history_all_6_of_6": {
+          "patients": 393,
+          "icus": 430,
+          "events_with_at_least_one_positive_window": 11,
+          "event_patients": 11,
+          "windows": 5204,
+          "labels": {
+            "positive": 34,
+            "negative": 4678,
+            "censored": 492
+          },
+          "binary_patients": 369,
+          "binary_windows": 4712,
+          "observed_patient_hours_including_censored": 5184.327222222222,
+          "binary_evaluable_patient_hours": 4710.232777777778,
+          "positive_fraction_of_binary_windows": 0.007215619694397283,
+          "coverage_fraction": {
+            "patients": 0.1722173531989483,
+            "icus": 0.14453781512605043,
+            "events_with_at_least_one_positive_window": 0.044534412955465584,
+            "windows": 0.033391295420567346,
+            "observed_patient_hours_including_censored": 0.033584204834423155
+          }
+        },
+        "current_and_history_at_least_3_of_6": {
+          "patients": 582,
+          "icus": 656,
+          "events_with_at_least_one_positive_window": 32,
+          "event_patients": 32,
+          "windows": 15753,
+          "labels": {
+            "positive": 103,
+            "negative": 14113,
+            "censored": 1537
+          },
+          "binary_patients": 569,
+          "binary_windows": 14216,
+          "observed_patient_hours_including_censored": 15682.340833333334,
+          "binary_evaluable_patient_hours": 14206.07111111111,
+          "positive_fraction_of_binary_windows": 0.0072453573438379295,
+          "coverage_fraction": {
+            "patients": 0.25503943908851884,
+            "icus": 0.22050420168067228,
+            "events_with_at_least_one_positive_window": 0.12955465587044535,
+            "windows": 0.10107860813993032,
+            "observed_patient_hours_including_censored": 0.10159060650576529
+          }
+        },
+        "current_and_history_all_6_of_6": {
+          "patients": 393,
+          "icus": 430,
+          "events_with_at_least_one_positive_window": 11,
+          "event_patients": 11,
+          "windows": 5204,
+          "labels": {
+            "positive": 34,
+            "negative": 4678,
+            "censored": 492
+          },
+          "binary_patients": 369,
+          "binary_windows": 4712,
+          "observed_patient_hours_including_censored": 5184.327222222222,
+          "binary_evaluable_patient_hours": 4710.232777777778,
+          "positive_fraction_of_binary_windows": 0.007215619694397283,
+          "coverage_fraction": {
+            "patients": 0.1722173531989483,
+            "icus": 0.14453781512605043,
+            "events_with_at_least_one_positive_window": 0.044534412955465584,
+            "windows": 0.033391295420567346,
+            "observed_patient_hours_including_censored": 0.033584204834423155
+          }
+        }
+      },
+      "mutually_exclusive_current_status": {
+        "no_current_epoch_planned": {
+          "patients": 1999,
+          "icus": 2553,
+          "events_with_at_least_one_positive_window": 193,
+          "event_patients": 186,
+          "windows": 111590,
+          "labels": {
+            "positive": 906,
+            "negative": 98858,
+            "censored": 11826
+          },
+          "binary_patients": 1831,
+          "binary_windows": 99764,
+          "observed_patient_hours_including_censored": 110379.76527777778,
+          "binary_evaluable_patient_hours": 99674.46777777778,
+          "positive_fraction_of_binary_windows": 0.009081432179944669
+        },
+        "current_decode_unavailable": {
+          "patients": 270,
+          "icus": 283,
+          "events_with_at_least_one_positive_window": 6,
+          "event_patients": 6,
+          "windows": 2840,
+          "labels": {
+            "positive": 21,
+            "negative": 2583,
+            "censored": 236
+          },
+          "binary_patients": 234,
+          "binary_windows": 2604,
+          "observed_patient_hours_including_censored": 2816.5183333333334,
+          "binary_evaluable_patient_hours": 2602.016666666667,
+          "positive_fraction_of_binary_windows": 0.008064516129032258
+        },
+        "current_decoded_engineering_rejected": {
+          "patients": 778,
+          "icus": 905,
+          "events_with_at_least_one_positive_window": 56,
+          "event_patients": 56,
+          "windows": 23394,
+          "labels": {
+            "positive": 171,
+            "negative": 20862,
+            "censored": 2361
+          },
+          "binary_patients": 754,
+          "binary_windows": 21033,
+          "observed_patient_hours_including_censored": 23228.86472222222,
+          "binary_evaluable_patient_hours": 21009.949722222223,
+          "positive_fraction_of_binary_windows": 0.008130081300813009
+        },
+        "current_rr_accepted": {
+          "patients": 649,
+          "icus": 738,
+          "events_with_at_least_one_positive_window": 41,
+          "event_patients": 41,
+          "windows": 18025,
+          "labels": {
+            "positive": 121,
+            "negative": 16154,
+            "censored": 1750
+          },
+          "binary_patients": 630,
+          "binary_windows": 16275,
+          "observed_patient_hours_including_censored": 17942.87222222222,
+          "binary_evaluable_patient_hours": 16262.616944444444,
+          "positive_fraction_of_binary_windows": 0.007434715821812596
+        }
+      },
+      "hourly_history_valid_count_distribution": {
+        "0": 126567,
+        "1": 4101,
+        "2": 4121,
+        "3": 4593,
+        "4": 5296,
+        "5": 5967,
+        "6": 5204
+      },
+      "rejection_reason_window_counts_nonexclusive": {
+        "detector_error": 4,
+        "ecg_decode_unavailable": 2840,
+        "flat_run": 578,
+        "incomplete_beat_span": 11,
+        "insufficient_adjacent_rr_intervals": 835,
+        "insufficient_valid_rr_duration": 5704,
+        "low_beat_agreement": 1707,
+        "low_block_amplitude": 247,
+        "low_block_beat_agreement": 3142,
+        "nonfinite_samples": 7826,
+        "suspected_clipping": 7935,
+        "too_few_beats": 18,
+        "too_many_screened_rr_intervals": 7096
+      },
+      "decode_error_window_counts_nonexclusive_including_warnings": {
+        "incompatible_sample_grids": 19,
+        "lead_ii_absent": 2617,
+        "no_decodable_lead_ii": 2791,
+        "overlapping_signal_conflict": 48
+      },
+      "decode_status_window_counts": {
+        "not_planned": 111590,
+        "ok": 33593,
+        "partial": 7826,
+        "rejected": 19,
+        "unavailable": 2821
+      },
+      "descriptive_age_strata": {
+        "18_44": {
+          "all": {
+            "patients": 338,
+            "icus": 416,
+            "events_with_at_least_one_positive_window": 21,
+            "event_patients": 20,
+            "windows": 21938,
+            "labels": {
+              "positive": 102,
+              "negative": 19486,
+              "censored": 2350
+            },
+            "binary_patients": 332,
+            "binary_windows": 19588,
+            "observed_patient_hours_including_censored": 21728.483888888888,
+            "binary_evaluable_patient_hours": 19578.258611111112,
+            "positive_fraction_of_binary_windows": 0.005207269756994078
+          },
+          "current_rr_accepted": {
+            "patients": 118,
+            "icus": 130,
+            "events_with_at_least_one_positive_window": 5,
+            "event_patients": 5,
+            "windows": 3535,
+            "labels": {
+              "positive": 14,
+              "negative": 3193,
+              "censored": 328
+            },
+            "binary_patients": 115,
+            "binary_windows": 3207,
+            "observed_patient_hours_including_censored": 3519.5405555555553,
+            "binary_evaluable_patient_hours": 3204.8241666666668,
+            "positive_fraction_of_binary_windows": 0.004365450576863112
+          }
+        },
+        "45_64": {
+          "all": {
+            "patients": 820,
+            "icus": 1114,
+            "events_with_at_least_one_positive_window": 103,
+            "event_patients": 101,
+            "windows": 58525,
+            "labels": {
+              "positive": 519,
+              "negative": 52013,
+              "censored": 5993
+            },
+            "binary_patients": 806,
+            "binary_windows": 52532,
+            "observed_patient_hours_including_censored": 57964.20361111111,
+            "binary_evaluable_patient_hours": 52474.599444444444,
+            "positive_fraction_of_binary_windows": 0.009879692377979137
+          },
+          "current_rr_accepted": {
+            "patients": 283,
+            "icus": 334,
+            "events_with_at_least_one_positive_window": 24,
+            "event_patients": 24,
+            "windows": 8484,
+            "labels": {
+              "positive": 74,
+              "negative": 7582,
+              "censored": 828
+            },
+            "binary_patients": 277,
+            "binary_windows": 7656,
+            "observed_patient_hours_including_censored": 8444.825833333334,
+            "binary_evaluable_patient_hours": 7648.638333333333,
+            "positive_fraction_of_binary_windows": 0.009665621734587251
+          }
+        },
+        "65_89": {
+          "all": {
+            "patients": 1002,
+            "icus": 1286,
+            "events_with_at_least_one_positive_window": 110,
+            "event_patients": 106,
+            "windows": 67360,
+            "labels": {
+              "positive": 536,
+              "negative": 59845,
+              "censored": 6979
+            },
+            "binary_patients": 982,
+            "binary_windows": 60381,
+            "observed_patient_hours_including_censored": 66732.4388888889,
+            "binary_evaluable_patient_hours": 60328.29138888889,
+            "positive_fraction_of_binary_windows": 0.008876964608072076
+          },
+          "current_rr_accepted": {
+            "patients": 222,
+            "icus": 245,
+            "events_with_at_least_one_positive_window": 8,
+            "event_patients": 8,
+            "windows": 5568,
+            "labels": {
+              "positive": 22,
+              "negative": 5006,
+              "censored": 540
+            },
+            "binary_patients": 213,
+            "binary_windows": 5028,
+            "observed_patient_hours_including_censored": 5543.607222222222,
+            "binary_evaluable_patient_hours": 5025.443333333334,
+            "positive_fraction_of_binary_windows": 0.004375497215592681
+          }
+        },
+        "age_obscured_over_89": {
+          "all": {
+            "patients": 132,
+            "icus": 159,
+            "events_with_at_least_one_positive_window": 13,
+            "event_patients": 13,
+            "windows": 8026,
+            "labels": {
+              "positive": 62,
+              "negative": 7113,
+              "censored": 851
+            },
+            "binary_patients": 126,
+            "binary_windows": 7175,
+            "observed_patient_hours_including_censored": 7942.894166666667,
+            "binary_evaluable_patient_hours": 7167.901666666667,
+            "positive_fraction_of_binary_windows": 0.008641114982578397
+          },
+          "current_rr_accepted": {
+            "patients": 27,
+            "icus": 29,
+            "events_with_at_least_one_positive_window": 4,
+            "event_patients": 4,
+            "windows": 438,
+            "labels": {
+              "positive": 11,
+              "negative": 373,
+              "censored": 54
+            },
+            "binary_patients": 26,
+            "binary_windows": 384,
+            "observed_patient_hours_including_censored": 434.8986111111111,
+            "binary_evaluable_patient_hours": 383.7111111111111,
+            "positive_fraction_of_binary_windows": 0.028645833333333332
+          }
+        }
+      }
+    },
+    "development": {
+      "stages": {
+        "all_risk_windows": {
+          "patients": 11366,
+          "icus": 14747,
+          "events_with_at_least_one_positive_window": 1222,
+          "event_patients": 1176,
+          "windows": 814154,
+          "labels": {
+            "positive": 6055,
+            "negative": 727815,
+            "censored": 80284
+          },
+          "binary_patients": 11160,
+          "binary_windows": 733870,
+          "observed_patient_hours_including_censored": 806752.1663888888,
+          "binary_evaluable_patient_hours": 733251.9619444445,
+          "positive_fraction_of_binary_windows": 0.008250780110918827,
+          "coverage_fraction": {
+            "patients": 1.0,
+            "icus": 1.0,
+            "events_with_at_least_one_positive_window": 1.0,
+            "windows": 1.0,
+            "observed_patient_hours_including_censored": 1.0
+          }
+        },
+        "current_epoch_planned": {
+          "patients": 3888,
+          "icus": 4493,
+          "events_with_at_least_one_positive_window": 315,
+          "event_patients": 312,
+          "windows": 225300,
+          "labels": {
+            "positive": 1454,
+            "negative": 203087,
+            "censored": 20759
+          },
+          "binary_patients": 3812,
+          "binary_windows": 204541,
+          "observed_patient_hours_including_censored": 223972.565,
+          "binary_evaluable_patient_hours": 204388.72833333333,
+          "positive_fraction_of_binary_windows": 0.007108599253939308,
+          "coverage_fraction": {
+            "patients": 0.3420728488474397,
+            "icus": 0.30467213670577065,
+            "events_with_at_least_one_positive_window": 0.25777414075286414,
+            "windows": 0.2767289726513657,
+            "observed_patient_hours_including_censored": 0.2776225144861101
+          }
+        },
+        "current_decoded_ok_or_partial": {
+          "patients": 3843,
+          "icus": 4436,
+          "events_with_at_least_one_positive_window": 303,
+          "event_patients": 300,
+          "windows": 211294,
+          "labels": {
+            "positive": 1382,
+            "negative": 190441,
+            "censored": 19471
+          },
+          "binary_patients": 3766,
+          "binary_windows": 191823,
+          "observed_patient_hours_including_censored": 210088.70388888888,
+          "binary_evaluable_patient_hours": 191679.51305555555,
+          "positive_fraction_of_binary_windows": 0.0072045583689130084,
+          "coverage_fraction": {
+            "patients": 0.3381136723561499,
+            "icus": 0.30080694378517664,
+            "events_with_at_least_one_positive_window": 0.2479541734860884,
+            "windows": 0.25952583909186716,
+            "observed_patient_hours_including_censored": 0.2604129404811752
+          }
+        },
+        "current_rr_accepted": {
+          "patients": 3150,
+          "icus": 3584,
+          "events_with_at_least_one_positive_window": 193,
+          "event_patients": 192,
+          "windows": 94995,
+          "labels": {
+            "positive": 601,
+            "negative": 86307,
+            "censored": 8087
+          },
+          "binary_patients": 3049,
+          "binary_windows": 86908,
+          "observed_patient_hours_including_censored": 94579.21944444445,
+          "binary_evaluable_patient_hours": 86849.38472222222,
+          "positive_fraction_of_binary_windows": 0.006915358770193768,
+          "coverage_fraction": {
+            "patients": 0.27714235439028684,
+            "icus": 0.24303248118261342,
+            "events_with_at_least_one_positive_window": 0.1579378068739771,
+            "windows": 0.11667939972044601,
+            "observed_patient_hours_including_censored": 0.1172345404014115
+          }
+        },
+        "history_at_least_3_of_6": {
+          "patients": 2836,
+          "icus": 3215,
+          "events_with_at_least_one_positive_window": 166,
+          "event_patients": 166,
+          "windows": 111224,
+          "labels": {
+            "positive": 745,
+            "negative": 100310,
+            "censored": 10169
+          },
+          "binary_patients": 2749,
+          "binary_windows": 101055,
+          "observed_patient_hours_including_censored": 110352.67027777778,
+          "binary_evaluable_patient_hours": 100989.43805555555,
+          "positive_fraction_of_binary_windows": 0.007372223046855673,
+          "coverage_fraction": {
+            "patients": 0.24951610065106458,
+            "icus": 0.2180104428019258,
+            "events_with_at_least_one_positive_window": 0.13584288052373159,
+            "windows": 0.13661297494085886,
+            "observed_patient_hours_including_censored": 0.1367863327491619
+          }
+        },
+        "history_all_6_of_6": {
+          "patients": 1840,
+          "icus": 2009,
+          "events_with_at_least_one_positive_window": 51,
+          "event_patients": 51,
+          "windows": 27491,
+          "labels": {
+            "positive": 158,
+            "negative": 25360,
+            "censored": 1973
+          },
+          "binary_patients": 1740,
+          "binary_windows": 25518,
+          "observed_patient_hours_including_censored": 27398.097222222223,
+          "binary_evaluable_patient_hours": 25508.239444444444,
+          "positive_fraction_of_binary_windows": 0.006191707814092014,
+          "coverage_fraction": {
+            "patients": 0.16188632764385008,
+            "icus": 0.13623109785041027,
+            "events_with_at_least_one_positive_window": 0.041734860883797055,
+            "windows": 0.03376633904642119,
+            "observed_patient_hours_including_censored": 0.03396098376141846
+          }
+        },
+        "current_and_history_at_least_3_of_6": {
+          "patients": 2816,
+          "icus": 3186,
+          "events_with_at_least_one_positive_window": 152,
+          "event_patients": 152,
+          "windows": 83309,
+          "labels": {
+            "positive": 511,
+            "negative": 75866,
+            "censored": 6932
+          },
+          "binary_patients": 2723,
+          "binary_windows": 76377,
+          "observed_patient_hours_including_censored": 82956.7875,
+          "binary_evaluable_patient_hours": 76331.75416666667,
+          "positive_fraction_of_binary_windows": 0.006690495829896435,
+          "coverage_fraction": {
+            "patients": 0.24775646665493578,
+            "icus": 0.21604394114057096,
+            "events_with_at_least_one_positive_window": 0.12438625204582651,
+            "windows": 0.10232584990063305,
+            "observed_patient_hours_including_censored": 0.10282809387587229
+          }
+        },
+        "current_and_history_all_6_of_6": {
+          "patients": 1840,
+          "icus": 2009,
+          "events_with_at_least_one_positive_window": 51,
+          "event_patients": 51,
+          "windows": 27491,
+          "labels": {
+            "positive": 158,
+            "negative": 25360,
+            "censored": 1973
+          },
+          "binary_patients": 1740,
+          "binary_windows": 25518,
+          "observed_patient_hours_including_censored": 27398.097222222223,
+          "binary_evaluable_patient_hours": 25508.239444444444,
+          "positive_fraction_of_binary_windows": 0.006191707814092014,
+          "coverage_fraction": {
+            "patients": 0.16188632764385008,
+            "icus": 0.13623109785041027,
+            "events_with_at_least_one_positive_window": 0.041734860883797055,
+            "windows": 0.03376633904642119,
+            "observed_patient_hours_including_censored": 0.03396098376141846
+          }
+        }
+      },
+      "mutually_exclusive_current_status": {
+        "no_current_epoch_planned": {
+          "patients": 10062,
+          "icus": 12727,
+          "events_with_at_least_one_positive_window": 974,
+          "event_patients": 945,
+          "windows": 588854,
+          "labels": {
+            "positive": 4601,
+            "negative": 524728,
+            "censored": 59525
+          },
+          "binary_patients": 9325,
+          "binary_windows": 529329,
+          "observed_patient_hours_including_censored": 582779.6013888889,
+          "binary_evaluable_patient_hours": 528863.2336111111,
+          "positive_fraction_of_binary_windows": 0.008692136648473823
+        },
+        "current_decode_unavailable": {
+          "patients": 1323,
+          "icus": 1391,
+          "events_with_at_least_one_positive_window": 31,
+          "event_patients": 31,
+          "windows": 14006,
+          "labels": {
+            "positive": 72,
+            "negative": 12646,
+            "censored": 1288
+          },
+          "binary_patients": 1138,
+          "binary_windows": 12718,
+          "observed_patient_hours_including_censored": 13883.861111111111,
+          "binary_evaluable_patient_hours": 12709.215277777777,
+          "positive_fraction_of_binary_windows": 0.005661267494889133
+        },
+        "current_decoded_engineering_rejected": {
+          "patients": 3772,
+          "icus": 4353,
+          "events_with_at_least_one_positive_window": 254,
+          "event_patients": 251,
+          "windows": 116299,
+          "labels": {
+            "positive": 781,
+            "negative": 104134,
+            "censored": 11384
+          },
+          "binary_patients": 3656,
+          "binary_windows": 104915,
+          "observed_patient_hours_including_censored": 115509.48444444445,
+          "binary_evaluable_patient_hours": 104830.12833333333,
+          "positive_fraction_of_binary_windows": 0.007444121431635134
+        },
+        "current_rr_accepted": {
+          "patients": 3150,
+          "icus": 3584,
+          "events_with_at_least_one_positive_window": 193,
+          "event_patients": 192,
+          "windows": 94995,
+          "labels": {
+            "positive": 601,
+            "negative": 86307,
+            "censored": 8087
+          },
+          "binary_patients": 3049,
+          "binary_windows": 86908,
+          "observed_patient_hours_including_censored": 94579.21944444445,
+          "binary_evaluable_patient_hours": 86849.38472222222,
+          "positive_fraction_of_binary_windows": 0.006915358770193768
+        }
+      },
+      "hourly_history_valid_count_distribution": {
+        "0": 661296,
+        "1": 20559,
+        "2": 21075,
+        "3": 23530,
+        "4": 27866,
+        "5": 32337,
+        "6": 27491
+      },
+      "rejection_reason_window_counts_nonexclusive": {
+        "detector_error": 39,
+        "ecg_decode_unavailable": 14006,
+        "excessive_amplitude_range": 4,
+        "flat_run": 3111,
+        "incomplete_beat_span": 69,
+        "insufficient_adjacent_rr_intervals": 4162,
+        "insufficient_valid_rr_duration": 28146,
+        "low_beat_agreement": 8678,
+        "low_block_amplitude": 1170,
+        "low_block_beat_agreement": 16661,
+        "nonfinite_samples": 38726,
+        "suspected_clipping": 38543,
+        "too_few_beats": 73,
+        "too_many_screened_rr_intervals": 36042
+      },
+      "decode_error_window_counts_nonexclusive_including_warnings": {
+        "incompatible_sample_grids": 162,
+        "lead_ii_absent": 12605,
+        "no_decodable_lead_ii": 13592,
+        "overlapping_signal_conflict": 598
+      },
+      "decode_status_window_counts": {
+        "not_planned": 588854,
+        "ok": 172568,
+        "partial": 38726,
+        "rejected": 162,
+        "unavailable": 13844
+      },
+      "descriptive_age_strata": {
+        "18_44": {
+          "all": {
+            "patients": 1785,
+            "icus": 2278,
+            "events_with_at_least_one_positive_window": 108,
+            "event_patients": 106,
+            "windows": 130547,
+            "labels": {
+              "positive": 520,
+              "negative": 117109,
+              "censored": 12918
+            },
+            "binary_patients": 1753,
+            "binary_windows": 117629,
+            "observed_patient_hours_including_censored": 129391.98666666666,
+            "binary_evaluable_patient_hours": 117570.83277777777,
+            "positive_fraction_of_binary_windows": 0.0044206785741611335
+          },
+          "current_rr_accepted": {
+            "patients": 528,
+            "icus": 594,
+            "events_with_at_least_one_positive_window": 19,
+            "event_patients": 19,
+            "windows": 19480,
+            "labels": {
+              "positive": 63,
+              "negative": 17818,
+              "censored": 1599
+            },
+            "binary_patients": 509,
+            "binary_windows": 17881,
+            "observed_patient_hours_including_censored": 19406.48888888889,
+            "binary_evaluable_patient_hours": 17873.668333333335,
+            "positive_fraction_of_binary_windows": 0.0035232928807113696
+          }
+        },
+        "45_64": {
+          "all": {
+            "patients": 3930,
+            "icus": 5194,
+            "events_with_at_least_one_positive_window": 482,
+            "event_patients": 465,
+            "windows": 292473,
+            "labels": {
+              "positive": 2410,
+              "negative": 262060,
+              "censored": 28003
+            },
+            "binary_patients": 3875,
+            "binary_windows": 264470,
+            "observed_patient_hours_including_censored": 289843.1091666667,
+            "binary_evaluable_patient_hours": 264219.03944444447,
+            "positive_fraction_of_binary_windows": 0.0091125647521458
+          },
+          "current_rr_accepted": {
+            "patients": 1254,
+            "icus": 1462,
+            "events_with_at_least_one_positive_window": 97,
+            "event_patients": 96,
+            "windows": 40984,
+            "labels": {
+              "positive": 329,
+              "negative": 37139,
+              "censored": 3516
+            },
+            "binary_patients": 1223,
+            "binary_windows": 37468,
+            "observed_patient_hours_including_censored": 40789.68194444444,
+            "binary_evaluable_patient_hours": 37434.17055555555,
+            "positive_fraction_of_binary_windows": 0.008780826305113697
+          }
+        },
+        "65_89": {
+          "all": {
+            "patients": 5036,
+            "icus": 6453,
+            "events_with_at_least_one_positive_window": 591,
+            "event_patients": 566,
+            "windows": 350946,
+            "labels": {
+              "positive": 2922,
+              "negative": 313275,
+              "censored": 34749
+            },
+            "binary_patients": 4932,
+            "binary_windows": 316197,
+            "observed_patient_hours_including_censored": 347738.28055555554,
+            "binary_evaluable_patient_hours": 315909.4111111111,
+            "positive_fraction_of_binary_windows": 0.009241074393495195
+          },
+          "current_rr_accepted": {
+            "patients": 1242,
+            "icus": 1385,
+            "events_with_at_least_one_positive_window": 71,
+            "event_patients": 71,
+            "windows": 32024,
+            "labels": {
+              "positive": 196,
+              "negative": 29130,
+              "censored": 2698
+            },
+            "binary_patients": 1198,
+            "binary_windows": 29326,
+            "observed_patient_hours_including_censored": 31889.209166666667,
+            "binary_evaluable_patient_hours": 29308.834722222222,
+            "positive_fraction_of_binary_windows": 0.006683489054081703
+          }
+        },
+        "age_obscured_over_89": {
+          "all": {
+            "patients": 661,
+            "icus": 822,
+            "events_with_at_least_one_positive_window": 41,
+            "event_patients": 40,
+            "windows": 40188,
+            "labels": {
+              "positive": 203,
+              "negative": 35371,
+              "censored": 4614
+            },
+            "binary_patients": 645,
+            "binary_windows": 35574,
+            "observed_patient_hours_including_censored": 39778.79,
+            "binary_evaluable_patient_hours": 35552.678611111114,
+            "positive_fraction_of_binary_windows": 0.005706414797323888
+          },
+          "current_rr_accepted": {
+            "patients": 132,
+            "icus": 143,
+            "events_with_at_least_one_positive_window": 6,
+            "event_patients": 6,
+            "windows": 2507,
+            "labels": {
+              "positive": 13,
+              "negative": 2220,
+              "censored": 274
+            },
+            "binary_patients": 125,
+            "binary_windows": 2233,
+            "observed_patient_hours_including_censored": 2493.8394444444443,
+            "binary_evaluable_patient_hours": 2232.711111111111,
+            "positive_fraction_of_binary_windows": 0.005821764442454098
+          }
+        }
+      }
+    }
+  },
+  "provenance": {
+    "source_fingerprint_sha256": "8b9d4c53da38faaa42b284367cb14bed238fdda2f557e2a10bad6ad88aa4c2df",
+    "patient_split_sha256": "932a00d77d5952a8a0fc58a05e574bf25a4c9dc30e0f95dade942a681348c452",
+    "signal_summary_sha256": "fb37605b9c5ffcc27b67581de9d3b758f325f5610310624b903d12e2bce903da",
+    "review_code_sha256": "ca0136d38e94a9e021c276007ebda60a4ccc00e55f48daa9ab276f83cf48999a",
+    "source_validation": "Frozen completion/source metadata, source file sizes/mtimes stable during scan, and frozen signal source hashes; no raw waveform revalidation"
+  },
+  "definitions": {
+    "patient_counts": "Distinct patients with at least one included window; patient counts in disjoint window categories can overlap and must not be summed.",
+    "events": "Distinct ICU first-treatment events with at least one positive prediction window at the named stage, not sensitivity or prediction success.",
+    "current_epoch_planned": "Exact hourly endpoint exists in completed epoch cache; metadata overlap caused planning, not necessarily available lead II or decodable ECG.",
+    "current_decoded_ok_or_partial": "Decoder returned ok or partial; incomplete/nonfinite signal may still fail engineering screening.",
+    "history": "Current and preceding five exact hourly five-minute samples. Three/six samples do not mean three/six continuous ECG hours. History-only stages do not necessarily have accepted current RR.",
+    "hours": "Sum of each hourly landmark's actual untreated observation duration, including partial final intervals. Binary-evaluable hours exclude censored rows.",
+    "reasons": "Reason/error counts are nonexclusive and can exceed rejected windows; decode errors include warnings even if another source decoded successfully.",
+    "age": "Descriptive, unadjusted window/stay composition. Patients may have multiple ICU stays and age bands; no causal selection-bias or significance claim.",
+    "ceiling": "Planned/decodable stages are optimistic ceilings under unchanged data and hourly selection, not forecasts of recoverable or clinically valid HRV.",
+    "validity": "Engineering acceptance is not adjudicated timing accuracy, sinus rhythm, normal NN qualification, or clinical HRV validity."
+  },
+  "test_features_read": false,
+  "models_loaded_or_refitted": false,
+  "quality_rules_changed": false,
+  "dense_event_audit_epochs_used": false
+}

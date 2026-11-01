@@ -4,8 +4,10 @@ on:
     branches: [main]
     paths:
       - src/hrv_early_warning/beat_timing.py
+      - src/hrv_early_warning/timing_comparison.py
       - scripts/download_reference_ecg.py
       - scripts/validate_beat_timing.py
+      - scripts/compare_reference_timing.py
       - configs/beat_timing_reference.json
       - .github/workflows/reference-ecg.yml
   workflow_dispatch:
@@ -29,11 +31,17 @@ jobs:
         run: python scripts/validate_beat_timing.py benchmark --manifest artifacts/rr_validation/reference/manifest.json --output-dir artifacts/rr_validation/pilot
         env:
           PYTHONPATH: src
+      - name: Compare both methods on the same reference-adjacent beats
+        run: python scripts/compare_reference_timing.py --manifest artifacts/rr_validation/reference/manifest.json --output-dir artifacts/rr_validation/paired
+        env:
+          PYTHONPATH: src
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: public-ecg-pilot-aggregate
           # Only aggregate results. Never publish the downloaded ECG itself.
-          path: artifacts/rr_validation/pilot/
+          path: |
+            artifacts/rr_validation/pilot/
+            artifacts/rr_validation/paired/
           retention-days: 7
           if-no-files-found: warn

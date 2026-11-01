@@ -30,6 +30,10 @@ Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗，完成 340,354 �
 
 真實訓練片段抽查已發現：通過目前工程篩選的 ECG，仍可能因搏動定位點變動而影響 RR 變異量。六例皆完整重現快取，但不構成準確率驗證；本輪只作固定工程基準，詳見[抽查證據及下一版驗證要求](docs/signal_quality_evidence.md)。
 
+後續[覆蓋率稽核](docs/coverage_review.md)已完整掃描 814,154 個開發時窗：驗證集 247 個事件中，72 個至少有當下已規劃片段、68 個可解碼、41 個工程通過。72／247 只是在既有資料與當前取樣規格下的理想上限。另已建立[相同搏動集合的定位對照](docs/timing_comparison.md)及[可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)；後者真實 preflight 完成，新模型擬合仍待本機科學環境恢復。
+
+[MI 備案審查](docs/mi_feasibility_review.md)也已完成：舊題目是 MI 患者的死亡風險、以結局倒推取窗，既有探索只有 141 人、37 個死亡，不能直接當作較大樣本的發作前預警題目。暫不換題，先按實測的量測與覆蓋證據決定下一步。
+
 ## 團隊
 
 | 成員 | 就讀單位 | 年級 |
@@ -135,6 +139,10 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [M2 全量訊號、配對模型與實際誤報結果](docs/m2_signal_model_results.md)
 - [v2 搏動定位與 RR 量測驗證準備](docs/rr_validation_v2.md)
 - [一致搏動定位候選與固定公開 ECG 試行](docs/beat_timing_validation.md)
+- [相同參考搏動上的配對誤差比較](docs/timing_comparison.md)
+- [實際患者／事件／時間覆蓋率](docs/coverage_review.md)
+- [RR 額外資訊的探索性控制模型](docs/incremental_value_review.md)
+- [回到 MI 的資料與方法可行性](docs/mi_feasibility_review.md)
 - [展示操作與三分鐘導覽](docs/demo_walkthrough.md)
 - [產品交付與驗收紀錄](docs/product_delivery.md)
 - [前作與來源](docs/references.md)
