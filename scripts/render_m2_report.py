@@ -320,8 +320,9 @@ def ratio(numerator, denominator):
     return f"{numerator:,} / {denominator:,}（{100 * numerator / denominator:.2f}%）" if denominator else "不適用（分母為 0）"
 
 
-def estimate(value, bounds):
-    return f"{value:.5f} [{bounds[0]:.5f}, {bounds[1]:.5f}]"
+def estimate(value, bounds, *, scientific=False):
+    precision = ".3e" if scientific else ".5f"
+    return f"{value:{precision}} [{bounds[0]:{precision}}, {bounds[1]:{precision}}]"
 
 
 def markdown_report(signal, development, comparison):
@@ -376,7 +377,7 @@ def markdown_report(signal, development, comparison):
     for name in PAIRED[1:]:
         value = comparison["comparisons"][name]
         lines.append("| " + LABELS[name] + " | " + " | ".join(estimate(value["delta_point_estimate"][metric],
-                     value["delta_confidence_interval_95"][metric]) for metric in METRICS) + " |")
+                     value["delta_confidence_interval_95"][metric], scientific=metric == "Brier") for metric in METRICS) + " |")
     lines += ["", "![三組配對增量與區間](paired_delta.svg)", "", "## 全風險集合生命徵象基準（族群不同，獨立呈現）", ""]
     full_model = models["vitals_all"]
     full_stats = full_model["data"]["validation"]
@@ -465,7 +466,7 @@ def render_figures(development, comparison, output):
         ax.set_xlim(left=0)
         ax.set_title("Identical RR-accepted validation windows; test unopened")
         ax.grid(axis="x", alpha=.2)
-        ax.legend(loc="best", fontsize=8)
+        fig.legend(loc="outside upper right", fontsize=8)
         fig.savefig(output / "paired_auprc.svg", metadata={"Date": None})
         plt.close(fig)
 

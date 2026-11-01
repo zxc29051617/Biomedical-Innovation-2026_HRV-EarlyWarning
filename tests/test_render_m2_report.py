@@ -399,6 +399,30 @@ class RenderReportTests(unittest.TestCase):
         signal, development, comparison = renderer.load_validated(self.work)
         self.assertIn("無抓到事件，不適用", renderer.markdown_report(signal, development, comparison))
 
+    def test_tiny_negative_brier_delta_interval_keeps_nonzero_upper_bound(self):
+        value = self.comparison["comparisons"]["paired_current_rr"]
+        value["delta_point_estimate"]["Brier"] = -7.648487050640994e-6
+        value["delta_confidence_interval_95"]["Brier"] = [-1.4166152008175301e-5, -3.996413717774481e-7]
+        report = renderer.markdown_report(self.signal, self.development, self.comparison)
+        self.assertIn("-7.648e-06 [-1.417e-05, -3.996e-07]", report)
+        delta_section = report.split("## 相對配對常規模型的差值", 1)[1].split("## 全風險集合", 1)[0]
+        row = next(line for line in delta_section.splitlines() if line.startswith("| 配對：加入當下 RR |"))
+        self.assertNotIn("-0.00000", row.split("|")[-2])
+        # Absolute Brier and discrimination estimates retain their established
+        # fixed-point display; only the Brier increment needs this precision.
+        self.assertIn("0.19000 [0.17000, 0.21000]", report)
+        self.assertIn("0.02000 [-0.01000, 0.05000]", report)
+
+    def test_tiny_brier_delta_crossing_zero_keeps_both_interval_directions(self):
+        value = self.comparison["comparisons"]["paired_history_rr"]
+        value["delta_point_estimate"]["Brier"] = -2.3663146966196313e-7
+        value["delta_confidence_interval_95"]["Brier"] = [-1.3438632691385495e-5, 1.1658152238444733e-5]
+        report = renderer.markdown_report(self.signal, self.development, self.comparison)
+        self.assertIn("-2.366e-07 [-1.344e-05, 1.166e-05]", report)
+        delta_section = report.split("## 相對配對常規模型的差值", 1)[1].split("## 全風險集合", 1)[0]
+        row = next(line for line in delta_section.splitlines() if line.startswith("| 配對：加入歷史 RR |"))
+        self.assertNotIn("-0.00000", row.split("|")[-2])
+
     def test_refusal_preserves_existing_review_files_and_reports_safe_error(self):
         self.output.mkdir(parents=True)
         report = self.output / "summary.md"

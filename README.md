@@ -8,11 +8,11 @@
 
 核心研究問題：**在相同誤報負擔下，HRV 與個人過去的變化，能否比心率、血壓等常規資訊更早辨識事件？** 模型預測的是給藥紀錄中的事件，不直接判定敗血性休克或治療必要性。
 
-目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件、同次 ICU 波形配對，並進入 ECG 解碼、工程品質篩選、候選 RR 特徵與開發模型階段。醫學與資料定義見[臨床證據審查](docs/clinical_evidence.md)，訊號規則見[訊號品質依據](docs/signal_quality_evidence.md)。工程品質通過不代表已確認正常心律或臨床 HRV；保留測試仍鎖定。
+目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件、同次 ICU 波形配對，以及全量 ECG 解碼、工程品質篩選與五組開發模型比較。醫學與資料定義見[臨床證據審查](docs/clinical_evidence.md)，訊號規則見[訊號品質依據](docs/signal_quality_evidence.md)。工程品質通過不代表已確認正常心律或臨床 HRV；保留測試尚未用於模型評估。
 
-2026-11-01 的 protocol 0.2 稽核：23,327 次成人 ICU、4,862 個首次事件；426 個事件有合法預測前 II 通道 metadata，其中 372 個至少有 3 小時、220 個有完整 6 小時覆蓋。這些是檔案存在性，尚不是品質合格的 HRV 樣本。完整排除原因與早期事件限制見[資料盤點](docs/data_inventory.md)。
+2026-11-01 的 protocol 0.2 稽核：23,327 次成人 ICU、4,862 個首次事件；426 個事件有合法預測前 II 通道 metadata，其中 372 個至少有 3 小時、220 個有完整 6 小時覆蓋。這些是檔案存在性計數，不能當作品質合格的 HRV 樣本。完整排除原因與早期事件限制見[資料盤點](docs/data_inventory.md)。
 
-Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗。第一個生命徵象基準在開發驗證得到 AUROC 0.680、AUPRC 0.0267（陽性比例 0.00873）；目前門檻抓到 28／247 個可預警事件。全量 ECG 與 RR 配對比較仍在執行，結果及限制見 [M2 紀錄](docs/m2_results.md)，不能宣稱已證明 HRV 增益。
+Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗，完成 340,354 個五分鐘 ECG 片段；142,489 個通過工程篩選，1,529 個有預警機會的事件中有 244 個至少具一個可評分時點。配對開發驗證包含 630 位患者、41 個事件：常規模型 AUPRC 0.02419，加入歷史 RR 為 0.02698，但配對差值區間跨零，**目前沒有清楚的 RR 增益證據**；加入當下 RR 的 AUPRC 反而降低。完整數值、拒絕原因與誤報分母見[全量訊號及配對結果](docs/m2_signal_model_results.md)，隊列與生命徵象基準見 [M2 紀錄](docs/m2_results.md)。
 
 真實訓練片段抽查已發現：通過目前工程篩選的 ECG，仍可能因搏動定位點變動而影響 RR 變異量。六例皆完整重現快取，但不構成準確率驗證；本輪只作固定工程基準，詳見[抽查證據及下一版驗證要求](docs/signal_quality_evidence.md)。
 
@@ -118,6 +118,7 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [近期里程碑](docs/roadmap.md)
 - [資料盤點證據](docs/data_inventory.md)
 - [M2 風險集合、訊號工作與開發基準](docs/m2_results.md)
+- [M2 全量訊號、配對模型與實際誤報結果](docs/m2_signal_model_results.md)
 - [v2 搏動定位與 RR 量測驗證準備](docs/rr_validation_v2.md)
 - [前作與來源](docs/references.md)
 - [機器可讀規格](configs/protocol.toml)
