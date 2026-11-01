@@ -37,4 +37,10 @@ def pipeline_status(work_dir):
     finalizer = work / "finalization_status.json"
     if finalizer.exists():
         result["automatic_finalization"] = json.loads(finalizer.read_text())
+    for name, filename in (("signal_job", "signal_job_status.json"),
+                           ("automatic_comparison", "comparison_status.json"),
+                           ("automatic_report", "report_status.json")):
+        path = work / filename
+        if path.exists():
+            result[name] = json.loads(path.read_text())
     return result

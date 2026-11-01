@@ -82,8 +82,8 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 ```bash
 PYTHONPATH=src python -m hrv_early_warning vitals \
   --paths configs/paths.local.toml --output reports/local/vitals.json
-PYTHONPATH=src python -m hrv_early_warning signals \
-  --paths configs/paths.local.toml --workers 8 --output reports/local/signals.json
+PYTHONPATH=src python scripts/run_signals_managed.py \
+  --paths configs/paths.local.toml --workers 2
 PYTHONPATH=src python -m hrv_early_warning develop \
   --paths configs/paths.local.toml --output reports/local/development.json
 PYTHONPATH=src python -m hrv_early_warning compare \
@@ -97,6 +97,10 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 比較完成後，可執行 `PYTHONPATH=src python scripts/render_m2_report.py --work-dir artifacts/m2`，產生彙總表與兩張 SVG 至 `reports/local/m2_publishable/`，供團隊審閱。工具核對完整片段數、模型來源、bootstrap 規格及各項分母；不完整或來源不一致會拒絕產生新報告，不讀患者特徵或反序列化模型，也不會自動發布。
 
 使用 `PYTHONPATH=src python -m hrv_early_warning status` 查詢進度。若訊號工作已另行啟動，`PYTHONPATH=src python scripts/finalize_m2.py` 可等待完整快取後接續建模；它不啟動另一份 ECG 工作，預設最多等候 24 小時。工作失敗會留下明確狀態，不能將等待程式仍在執行當成訊號工作成功。
+
+本機全量執行曾因記憶體不足而中斷，已提交片段均保留。`run_signals_managed.py` 預設使用兩個工作程序，持有同目錄鎖，將輸出直接追加至 `artifacts/m2/signal_job.log`，每 30 秒更新 `signal_job_status.json`。只有工作程序異常終止且同次執行出現新的 OOM 紀錄，才降為單程序續跑；最多三次嘗試，不改品質規則、特徵或快取指紋。其他錯誤會明確停止，完整快取通過核對後才標示完成。
+
+若需停止，可將 `{"action":"stop"}` 存為 `artifacts/m2/signal_stop_request.json`；管理程序會清理子程序群組並保留請求檔。恢復時移除此請求檔，再執行相同命令即可沿用快取。意外終止可能留下最後一次狀態，因此應搭配 `updated_utc` 心跳及完整片段數判讀，不把過期的 `running` 當成仍在執行。
 
 `signals` 使用官方 WFDB 解碼，不插補缺失 ECG。每小時採用更新前最後五分鐘，過去六小時以六個這樣的片段描述；事件前另做密集五分鐘覆蓋盤點，但模型不會混入這些依事件選取的額外片段。候選指標為 mean RR、SDRR 與 RMSSD of RR，尚未確認正常 NN 心搏、AF 或 pacing。
 
