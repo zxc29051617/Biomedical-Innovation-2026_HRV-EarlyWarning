@@ -44,4 +44,6 @@ python scripts/evaluate_rr_controls.py --fit --output-dir artifacts/rr_controls/
 
 本次真實 preflight 已核對 76,970 個訓練與 18,025 個驗證配對時窗，其中非截尾為 70,633／16,275，與原 M2 相同；沒有讀取保留測試特徵。**新五組對照尚未在真實資料上擬合**：目前工具環境看不到原 `lab410`，系統 Python 缺少科學依賴。純邏輯測試與 CI 合成端到端測試分開記錄，不能把 CI 合成結果當成患者模型成績。
 
+程式已於[正式 CI](https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41305759671)通過完整 409 項測試，包含合成資料的原基準重現、訓練內補值、RR 不重複增加缺值指示，以及重新開表後在特徵讀取前重驗來源。這提供實作驗收，不提供新患者模型的 AUPRC 或臨床增益結果。
+
 原 MI 專案曾研究部分與 M2 固定分組重疊的患者，詳見 [MI 可行性審查](mi_feasibility_review.md)。本流程仍不開 M2 保留測試，但不宣稱這些患者從未出現在任何前作。

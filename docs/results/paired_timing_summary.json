@@ -1,0 +1,163 @@
+{
+  "comparison_version": "shared_reference_timing_v0.1.0",
+  "aggregation": "Counts pool reference opportunities at each sampling rate. Error summaries are medians of window statistics on shared support, not pooled beat percentiles. No independent validation or confidence interval is claimed.",
+  "delta_direction": "candidate minus baseline; negative means smaller conditional error",
+  "by_sampling_rate": {
+    "125.0": {
+      "total_windows": 36,
+      "evaluated_windows": 36,
+      "failed_windows": 0,
+      "reference_beats_all_planned_windows": 13214,
+      "reference_denominators_evaluated_windows": {
+        "beats": 13214,
+        "original_adjacent_rr": 13178,
+        "original_adjacent_triplets": 13142
+      },
+      "common_support_totals": {
+        "beats": 11517,
+        "original_adjacent_rr": 10167,
+        "original_adjacent_triplets": 9597
+      },
+      "common_support_fractions": {
+        "beats": 0.87157560163463,
+        "original_adjacent_rr": 0.7715131279405069,
+        "original_adjacent_triplets": 0.7302541470095876
+      },
+      "all_nonempty_seeds_retained_windows": 9,
+      "candidate_abstained_seeds": 2141,
+      "detection": {
+        "baseline_xqrs": {
+          "reference_count": 13214,
+          "detected_count": 13684,
+          "matched_count": 13197,
+          "missed_count": 17,
+          "extra_count": 487,
+          "sensitivity": 0.998713485696988,
+          "ppv": 0.9644109909383222
+        },
+        "consistent_fiducial": {
+          "reference_count": 13214,
+          "detected_count": 11543,
+          "matched_count": 11517,
+          "missed_count": 1697,
+          "extra_count": 26,
+          "sensitivity": 0.87157560163463,
+          "ppv": 0.9977475526292992
+        }
+      },
+      "paired_errors": {
+        "timing": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 3.0441549040892393,
+          "candidate_median_of_window_mae_ms": 3.24866310160295,
+          "median_of_paired_window_mae_delta_ms": 0.1461019030070642,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 6.333333333325572,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 6.888888888896327
+        },
+        "rr": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 3.2278806584388655,
+          "candidate_median_of_window_mae_ms": 2.989436619719842,
+          "median_of_paired_window_mae_delta_ms": -0.10710194730793594,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 6.888888888965994,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 6.9999999999922125
+        },
+        "rr_change": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 5.24960654704971,
+          "candidate_median_of_window_mae_ms": 5.220871327253154,
+          "median_of_paired_window_mae_delta_ms": -0.2710027100286157,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 12.222222222291634,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 11.944444444537794
+        },
+        "rmssd_on_common_triplets": {
+          "usable_windows": 35,
+          "baseline_median_of_window_absolute_error_ms": 0.8708357848749415,
+          "candidate_median_of_window_absolute_error_ms": 0.7708754430825024,
+          "median_of_paired_window_absolute_error_delta_ms": -0.140190962820391
+        }
+      }
+    },
+    "360.0": {
+      "total_windows": 36,
+      "evaluated_windows": 36,
+      "failed_windows": 0,
+      "reference_beats_all_planned_windows": 13214,
+      "reference_denominators_evaluated_windows": {
+        "beats": 13214,
+        "original_adjacent_rr": 13178,
+        "original_adjacent_triplets": 13142
+      },
+      "common_support_totals": {
+        "beats": 11586,
+        "original_adjacent_rr": 10317,
+        "original_adjacent_triplets": 9800
+      },
+      "common_support_fractions": {
+        "beats": 0.8767973361586197,
+        "original_adjacent_rr": 0.7828957353164365,
+        "original_adjacent_triplets": 0.7457008065743418
+      },
+      "all_nonempty_seeds_retained_windows": 11,
+      "candidate_abstained_seeds": 1899,
+      "detection": {
+        "baseline_xqrs": {
+          "reference_count": 13214,
+          "detected_count": 13533,
+          "matched_count": 13138,
+          "missed_count": 76,
+          "extra_count": 395,
+          "sensitivity": 0.9942485242924172,
+          "ppv": 0.9708120889677085
+        },
+        "consistent_fiducial": {
+          "reference_count": 13214,
+          "detected_count": 11634,
+          "matched_count": 11586,
+          "missed_count": 1628,
+          "extra_count": 48,
+          "sensitivity": 0.8767973361586197,
+          "ppv": 0.9958741619391439
+        }
+      },
+      "paired_errors": {
+        "timing": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 0.5989817310562194,
+          "candidate_median_of_window_mae_ms": 2.907153729079079,
+          "median_of_paired_window_mae_delta_ms": 1.870519713237286,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 2.7777777778101154,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 5.555555555562023
+        },
+        "rr": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 0.9169363538658243,
+          "candidate_median_of_window_mae_ms": 1.5689300411569078,
+          "median_of_paired_window_mae_delta_ms": 0.6181114089931271,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 2.777777777822621,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 2.7777777779363078
+        },
+        "rr_change": {
+          "usable_windows": 35,
+          "baseline_median_of_window_mae_ms": 1.8398268398732154,
+          "candidate_median_of_window_mae_ms": 2.935862691961622,
+          "median_of_paired_window_mae_delta_ms": 1.1216501053921895,
+          "baseline_median_of_window_p95_ms_NOT_pooled_p95": 5.555555555588398,
+          "candidate_median_of_window_p95_ms_NOT_pooled_p95": 5.55555555578735
+        },
+        "rmssd_on_common_triplets": {
+          "usable_windows": 35,
+          "baseline_median_of_window_absolute_error_ms": 0.6262153613489474,
+          "candidate_median_of_window_absolute_error_ms": 0.4080398880204541,
+          "median_of_paired_window_absolute_error_delta_ms": 0.039511278629966284
+        }
+      }
+    }
+  },
+  "unchanged_detection_counts_verified": true,
+  "source_commit": "c237aa8624661494c429b434258fca48605a957c",
+  "workflow_run_url": "https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41305759620",
+  "artifact_id": 13083248294,
+  "artifact_zip_sha256": "ff7e1f5b5a3a7b8263ce344933436478266cb96a62be303c9d6169538a0e822e",
+  "source": "PAIRED_TIMING_SUMMARY_JSON from job 124845687221; full per-window report in CI artifact"
+}

@@ -16,7 +16,7 @@
 
 執行 `python scripts/package_demo.py` 可產生只含四個公開網頁資產與使用說明的 `artifacts/releases/HRV-EarlyWarning-demo.zip`。CI 使用合成資料測試瀏覽器操作；獨立的公開 ECG 工作流程驗證候選搏動定位，均不需 MIMIC 存取權限。驗收方法見 [產品交付紀錄](docs/product_delivery.md)。
 
-**已驗收：364 項 Python 測試、11 組 Chromium 操作檢查、桌機／手機版及本機 HTTP 服務。** 線上 Site 尚未部署；目前使用下載後的離線版。另完成固定公開標註 ECG 的 72 組評估，候選方法有明顯棄權代價，因此尚未替換原模型管線；詳見[實測結果](docs/beat_timing_validation.md)。
+**離線展示已通過 Python 與 Chromium 操作驗收，包含桌機／手機版及本機 HTTP 服務。** 歷次實際驗收數目及來源見[交付紀錄](docs/product_delivery.md)；最新分析程式另由 CI 測試。線上 Site 尚未部署；目前使用下載後的離線版。另完成固定公開標註 ECG 的 72 組評估及同一批搏動的配對比較，候選方法有明顯棄權代價，因此尚未替換原模型管線；詳見[實測結果](docs/timing_comparison.md)。
 
 ## 研究現況
 
@@ -30,7 +30,11 @@ Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗，完成 340,354 �
 
 真實訓練片段抽查已發現：通過目前工程篩選的 ECG，仍可能因搏動定位點變動而影響 RR 變異量。六例皆完整重現快取，但不構成準確率驗證；本輪只作固定工程基準，詳見[抽查證據及下一版驗證要求](docs/signal_quality_evidence.md)。
 
-後續[覆蓋率稽核](docs/coverage_review.md)已完整掃描 814,154 個開發時窗：驗證集 247 個事件中，72 個至少有當下已規劃片段、68 個可解碼、41 個工程通過。72／247 只是在既有資料與當前取樣規格下的理想上限。另已建立[相同搏動集合的定位對照](docs/timing_comparison.md)及[可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)；後者真實 preflight 完成，新模型擬合仍待本機科學環境恢復。
+後續[覆蓋率稽核](docs/coverage_review.md)已完整掃描 814,154 個開發時窗：驗證集 247 個事件中，72 個至少有當下已規劃片段、68 個可解碼、41 個工程通過；要求六個歷史片段全通過則只剩 11 個事件。72／247 只是在既有資料與當前取樣規格下的理想上限，並非其他導程、取窗方法或資料庫的上限。
+
+[相同搏動集合的定位對照](docs/timing_comparison.md)已實測完成：125 Hz 下原本看似很大的 RR 誤差差距，配對後縮小為逐窗 MAE 中位數 3.23 對 2.99 ms；候選仍有漏搏代價，原生 360 Hz 也沒有一致改善，維持不接入 M2。[20 名訓練患者的盲標選例](docs/rr_annotation_preparation.md)已凍結，包含工程接受／拒絕各 10 名；波形包與雙人標註尚未完成。
+
+[可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)已完成程式、合成資料驗收及真實資料 preflight。新模型擬合仍待本機科學 Python 環境恢復，尚無新患者模型成績，不能把程式測試當成預警增益。
 
 [MI 備案審查](docs/mi_feasibility_review.md)也已完成：舊題目是 MI 患者的死亡風險、以結局倒推取窗，既有探索只有 141 人、37 個死亡，不能直接當作較大樣本的發作前預警題目。暫不換題，先按實測的量測與覆蓋證據決定下一步。
 
@@ -140,6 +144,7 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [v2 搏動定位與 RR 量測驗證準備](docs/rr_validation_v2.md)
 - [一致搏動定位候選與固定公開 ECG 試行](docs/beat_timing_validation.md)
 - [相同參考搏動上的配對誤差比較](docs/timing_comparison.md)
+- [ICU 雙人盲標的固定選例與準備狀態](docs/rr_annotation_preparation.md)
 - [實際患者／事件／時間覆蓋率](docs/coverage_review.md)
 - [RR 額外資訊的探索性控制模型](docs/incremental_value_review.md)
 - [回到 MI 的資料與方法可行性](docs/mi_feasibility_review.md)
