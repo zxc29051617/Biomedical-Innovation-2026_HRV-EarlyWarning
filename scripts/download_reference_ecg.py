@@ -11,11 +11,35 @@ import json
 from pathlib import Path
 import re
 import tempfile
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 
 BASE = "https://physionet.org/files/mitdb/1.0.0/"
+OFFICIAL_S3_BASE = "https://physionet-open.s3.amazonaws.com/mitdb/1.0.0/"
 RECORDS = ("100", "118", "119", "200", "207", "214")
+
+
+def validate_reference_url(url, filename):
+    """Allow only the original URL or documented official S3 exact file.
+
+    PhysioNet's dataset Files section lists s3://physionet-open/mitdb/1.0.0/.
+    Exact equality intentionally excludes other hosts, versions, query strings,
+    credentials, and even another otherwise valid file in the same bucket.
+    """
+    if (not re.fullmatch(r"[0-9]{3}\.(hea|dat|atr)", filename)
+            or url not in {BASE + filename, OFFICIAL_S3_BASE + filename}):
+        raise ValueError("unexpected_reference_download_redirect")
+
+
+class OfficialReferenceRedirectHandler(HTTPRedirectHandler):
+    def __init__(self, filename):
+        super().__init__()
+        self.filename = filename
+
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        # Check before following each redirect, not only after fetching bytes.
+        validate_reference_url(new_url, self.filename)
+        return super().redirect_request(request, response, code, message, headers, new_url)
 
 
 def validate_plan(plan):
@@ -60,10 +84,10 @@ def main():
             if target.exists() or target.is_symlink():
                 raise FileExistsError(f"refusing_to_overwrite_reference_file:{filename}")
             request = Request(BASE + filename, headers={"User-Agent": "HRV-EarlyWarning-reference-pilot/0.1"})
-            with urlopen(request, timeout=30) as response:
-                # Only accept the official host/path; do not follow a mirror.
-                if response.url != BASE + filename:
-                    raise ValueError("unexpected_reference_download_redirect")
+            opener = build_opener(OfficialReferenceRedirectHandler(filename))
+            with opener.open(request, timeout=30) as response:
+                validate_reference_url(response.url, filename)
+                resolved_url = response.url
                 content = response.read(4_000_001)
             if not content or len(content) > 4_000_000:
                 raise ValueError("reference_file_empty_or_exceeds_pilot_size_limit")
@@ -72,7 +96,8 @@ def main():
                 temporary_path = Path(temporary.name)
             temporary_path.replace(target)
             files.append({"path": filename, "bytes": len(content),
-                          "sha256": hashlib.sha256(content).hexdigest(), "source_url": BASE + filename})
+                          "sha256": hashlib.sha256(content).hexdigest(), "source_url": BASE + filename,
+                          "resolved_url": resolved_url})
             print(f"Downloaded {filename}: {len(content)} bytes", flush=True)
     manifest = {"schema_version": "beat_timing_reference_manifest_v1", "plan": plan,
                 "plan_sha256": hashlib.sha256(plan_bytes).hexdigest(), "files": files,

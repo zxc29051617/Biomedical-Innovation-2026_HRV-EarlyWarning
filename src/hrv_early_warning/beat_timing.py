@@ -17,7 +17,8 @@ from scipy.signal import find_peaks, resample_poly
 
 
 ALGORITHM_VERSION = "consistent_extremum_candidate_v0.1.0"
-METRIC_VERSION = "beat_timing_metrics_v0.1.0"
+METRIC_VERSION = "beat_timing_metrics_v0.1.1"
+MATCH_COMPARISON_EPSILON_SECONDS = 1e-12
 
 
 @dataclass(frozen=True)
@@ -203,7 +204,9 @@ def match_beats(reference_seconds, detected_seconds, tolerance_seconds=0.1):
             if c > count or (c == count and e < error):
                 count, error, move = c, e, 2
             difference = abs(reference[i - 1] - detected[j - 1])
-            if difference <= tolerance_seconds:
+            # Absorb floating subtraction error at the inclusive tolerance
+            # boundary (e.g. 396/360 - 360/360 > 0.1 by ~8e-17 seconds).
+            if difference <= tolerance_seconds + MATCH_COMPARISON_EPSILON_SECONDS:
                 c, e = counts[i - 1, j - 1] + 1, errors[i - 1, j - 1] + difference
                 if c > count or (c == count and e <= error):
                     count, error, move = c, e, 3
@@ -281,6 +284,7 @@ def evaluate_timing(reference_seconds, detected_seconds, *, tolerance_seconds=0.
     ppv = n / len(detected) if len(detected) else None
     f1 = 2 * n / (len(reference) + len(detected)) if len(reference) + len(detected) else None
     result = {"metric_version": METRIC_VERSION, "match_tolerance_ms": tolerance_seconds * 1000,
+              "matching_numeric_slack_seconds": MATCH_COMPARISON_EPSILON_SECONDS,
               "matching_rule": "ordered_maximum_cardinality_then_minimum_absolute_error",
               "matching_tolerance_is_accuracy_threshold": False,
               "detection": {"reference_count": len(reference), "detected_count": len(detected),

@@ -128,6 +128,19 @@ class BeatTimingTests(unittest.TestCase):
         pairs = match_beats([1, 2], [.93, 1.01, 2.02], .1)
         np.testing.assert_array_equal(pairs, [[0, 1], [1, 2]])
 
+    def test_exact_100ms_inclusive_boundary_absorbs_floating_subtraction_error(self):
+        pairs = match_beats(np.array([360]) / 360, np.array([396]) / 360, .1)
+        np.testing.assert_array_equal(pairs, [[0, 0]])
+        reverse = match_beats(np.array([396]) / 360, np.array([360]) / 360, .1)
+        np.testing.assert_array_equal(reverse, [[0, 0]])
+        result = evaluate_timing([1], [1.1])
+        self.assertEqual(result["matching_numeric_slack_seconds"], 1e-12)
+        self.assertAlmostEqual(result["timing_error"]["absolute_median_ms"], 100)
+
+    def test_just_outside_100ms_beyond_numerical_slack_is_not_matched(self):
+        self.assertEqual(len(match_beats([1], [1.1 + 2e-12], .1)), 0)
+        self.assertEqual(len(match_beats([1.1 + 2e-12], [1], .1)), 0)
+
     def test_match_tolerance_is_never_reported_as_timing_accuracy(self):
         result = evaluate_timing([1, 2, 3], [1.09, 2.09, 3.09])
         self.assertEqual(result["detection"]["f1"], 1)
@@ -209,9 +222,11 @@ class ReferenceManifestTests(unittest.TestCase):
         sys.path.insert(0, str(root / "scripts"))
         try:
             import validate_beat_timing
+            import download_reference_ecg
         finally:
             sys.path.pop(0)
         cls.adapter = validate_beat_timing
+        cls.downloader = download_reference_ecg
         cls.plan = json.loads((root / "configs/beat_timing_reference.json").read_text())
 
     def make_fixture_manifest(self, directory):
@@ -224,7 +239,8 @@ class ReferenceManifestTests(unittest.TestCase):
                 path.write_bytes(b"synthetic unit test bytes, not real ECG")
                 files.append({"path": filename, "bytes": path.stat().st_size,
                               "sha256": self.adapter.sha256(path),
-                              "source_url": self.plan["download_base"] + filename})
+                              "source_url": self.plan["download_base"] + filename,
+                              "resolved_url": self.plan["download_base"] + filename})
         return {"schema_version": "beat_timing_reference_manifest_v1", "plan": self.plan,
                 "plan_sha256": self.adapter.sha256(self.adapter.REPOSITORY / "configs/beat_timing_reference.json"),
                 "files": files}
@@ -270,6 +286,41 @@ class ReferenceManifestTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "file_set_mismatch"):
                 self.adapter.checked_manifest(path)
 
+    def test_original_or_official_s3_exact_file_is_allowed(self):
+        for base in (self.downloader.BASE, self.downloader.OFFICIAL_S3_BASE):
+            self.downloader.validate_reference_url(base + "100.hea", "100.hea")
+
+    def test_redirect_other_host_filename_version_or_query_is_rejected(self):
+        urls = ["https://example.com/mitdb/1.0.0/100.hea",
+                "https://physionet-open.s3.amazonaws.com.evil.example/mitdb/1.0.0/100.hea",
+                self.downloader.OFFICIAL_S3_BASE + "118.hea",
+                self.downloader.OFFICIAL_S3_BASE + "100.dat",
+                "https://physionet-open.s3.amazonaws.com/mitdb/2.0.0/100.hea",
+                self.downloader.OFFICIAL_S3_BASE + "100.hea?alternate=true"]
+        for url in urls:
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                self.downloader.validate_reference_url(url, "100.hea")
+
+    def test_redirect_handler_checks_destination_before_following(self):
+        from urllib.request import Request
+        request = Request(self.downloader.BASE + "100.hea")
+        handler = self.downloader.OfficialReferenceRedirectHandler("100.hea")
+        with self.assertRaises(ValueError):
+            handler.redirect_request(request, None, 302, "Found", {}, "https://example.com/100.hea")
+        allowed = self.downloader.OFFICIAL_S3_BASE + "100.hea"
+        redirected = handler.redirect_request(request, None, 302, "Found", {}, allowed)
+        self.assertEqual(redirected.full_url, allowed)
+
+    def test_manifest_rejects_unofficial_resolved_url(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest = self.make_fixture_manifest(root)
+            path = root / "manifest.json"
+            manifest["files"][0]["resolved_url"] = "https://example.com/100.hea"
+            path.write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, "unexpected_reference_download_redirect"):
+                self.adapter.checked_manifest(path)
+
     def test_symlink_cannot_escape_verified_data_root(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -287,6 +338,33 @@ class ReferenceManifestTests(unittest.TestCase):
         for path in ("artifacts/m2", "docs", "src/hrv_early_warning"):
             with self.subTest(path=path), self.assertRaises(ValueError):
                 self.adapter.output_directory(self.adapter.REPOSITORY / path)
+
+    def test_compact_summary_keeps_denominators_and_does_not_call_window_p95_pooled(self):
+        first = evaluate_timing([1, 2, 3], [1.01, 2.02, 3.03], duration_seconds=300)
+        second = evaluate_timing([1, 2, 3], [1.05, 2.05], duration_seconds=300)
+        abstained = evaluate_timing([1, 2, 3], [], duration_seconds=300, full_detected_available=False)
+        report = {"candidate": provenance(), "scope": "synthetic summary arithmetic only", "windows": [
+            {"fs_hz": 360.0, "status": "evaluated", "reference_beat_count": 3,
+             "baseline_xqrs": first, "consistent_fiducial": first},
+            {"fs_hz": 360.0, "status": "evaluated", "reference_beat_count": 3,
+             "baseline_xqrs": second, "consistent_fiducial": abstained},
+            {"fs_hz": 360.0, "status": "failed", "reference_beat_count": 3},
+            {"fs_hz": 125.0, "status": "failed", "reference_beat_count": 3}]}
+        result = self.adapter.compact_summary(report)
+        group = result["by_sampling_rate"]["360.0"]
+        self.assertEqual(group["total_windows"], 3)
+        self.assertEqual(group["failed_windows"], 1)
+        self.assertEqual(group["full_candidate_windows"], 1)
+        self.assertEqual(group["reference_beats_in_all_planned_windows"], 9)
+        baseline = group["methods"]["baseline_xqrs"]
+        self.assertEqual(baseline["detection_totals"], {"reference_count": 6, "detected_count": 5, "matched_count": 5})
+        self.assertAlmostEqual(baseline["micro_sensitivity"], 5 / 6)
+        self.assertAlmostEqual(baseline["timing"]["median_of_window_absolute_p95_ms_NOT_pooled_p95"], 39.5)
+        self.assertAlmostEqual(baseline["shared_original_adjacent_rr"]["median_of_window_mae_ms"], 5)
+        self.assertEqual(baseline["shared_original_adjacent_triplet_rmssd"]["usable_windows"], 1)
+        self.assertEqual(group["methods"]["consistent_fiducial"]["timing"]["usable_windows"], 1)
+        self.assertIsNone(result["by_sampling_rate"]["125.0"]["methods"]["baseline_xqrs"]["micro_sensitivity"])
+        json.dumps(result, allow_nan=False)
 
     def test_wfdb_adapter_round_trip_is_synthetic_not_external_validation(self):
         # Deleted temporary fixture exercises decoding/annotation bookkeeping,
@@ -307,15 +385,21 @@ class ReferenceManifestTests(unittest.TestCase):
                             p_signal=signal[:, None], fmt=["16"], write_dir=str(root))
                 wfdb.wrann(row["record"], "atr", sample=peaks, symbol=["N"] * len(peaks), fs=fs, write_dir=str(root))
             files = [{"path": path.name, "bytes": path.stat().st_size,
-                      "sha256": self.adapter.sha256(path), "source_url": self.plan["download_base"] + path.name}
+                      "sha256": self.adapter.sha256(path), "source_url": self.plan["download_base"] + path.name,
+                      "resolved_url": self.plan["download_base"] + path.name}
                      for path in root.iterdir() if path.is_file()]
             manifest = {"schema_version": "beat_timing_reference_manifest_v1", "plan": self.plan,
                         "plan_sha256": self.adapter.sha256(self.adapter.REPOSITORY / "configs/beat_timing_reference.json"),
                         "files": files, "test_fixture_only": True}
             path = root / "manifest.json"
             path.write_text(json.dumps(manifest))
-            with patch.object(self.adapter, "output_directory", return_value=output):
+            # Keep the synthetic PILOT_SUMMARY_JSON out of real CI evidence logs.
+            with patch.object(self.adapter, "output_directory", return_value=output), patch("builtins.print") as printed:
                 self.adapter.benchmark(path, output)
+            summaries = [call.args[0] for call in printed.call_args_list
+                         if call.args and str(call.args[0]).startswith("PILOT_SUMMARY_JSON=")]
+            self.assertEqual(len(summaries), 1)
+            self.assertEqual(json.loads(summaries[0].split("=", 1)[1])["metric_version"], METRIC_VERSION)
             report = json.loads((output / "benchmark_summary.json").read_text())
             self.assertTrue(report["complete"])
             self.assertEqual(len(report["records"]), 6)

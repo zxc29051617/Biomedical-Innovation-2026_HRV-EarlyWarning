@@ -20,7 +20,11 @@ MIT-BIH 標籤可描述搏動種類，但單一 `N` 不足以確認整個窗為�
 
 ## 執行與狀態
 
-實作為 `src/hrv_early_warning/beat_timing.py`，另有獨立下載／驗證 CLI。32 個測試已在 lab410 的 numpy 2.2.6、scipy 1.15.3、wfdb 4.3.0 通過，涵蓋定位邊界、反相、寬峰、重複點、最大配對數／最小時間差、漏搏與棄權後的原始鄰接、100 ms 配對與精度的區別、檔案雜湊與路徑檢查，以及原生 360 Hz／125 Hz 的 WFDB 合成 round trip。合成測試不是獨立標註證據。
+實作為 `src/hrv_early_warning/beat_timing.py`，另有獨立下載／驗證 CLI。39 個測試已在 lab410 的 numpy 2.2.6、scipy 1.15.3、wfdb 4.3.0 通過，涵蓋定位邊界、反相、寬峰、重複點、最大配對數／最小時間差、漏搏與棄權後的原始鄰接、100 ms 配對與精度的區別及精確邊界、檔案雜湊與路徑檢查、官方下載轉址限制、跨窗彙總的分母與百分位意義，以及原生 360 Hz／125 Hz 的 WFDB 合成 round trip。合成測試不是獨立標註證據。
+
+首次公開 CI 執行期間、尚未查看任何定位效能結果時，獨立程式審查發現評估器的浮點邊界問題：360 Hz 的第 360／396 樣點恰差 100 ms，但浮點相減可能得到 0.10000000000000009 秒而被排除。`beat_timing_metrics_v0.1.1` 只在配對比較加入 1e-12 秒的數值誤差容許，並回報此數字；新增剛好 100 ms 與超過邊界 2e-12 秒的雙向測試。候選定位版本、全部參數、100 ms 實質配對規則與六筆清單均未改變，這是評估器數值修正，不是依 pilot 效能調參。第一輪 CI 僅保留執行紀錄，不作正式結果；正式 pilot 須以修正後的版本重跑。
+
+第一輪 CI 實際在第一個檔案的官方轉址檢查失敗，未產生 benchmark 結果。查核 [PhysioNet 官方 Files 說明](https://physionet.org/content/mitdb/1.0.0/#files-panel) 明列 `s3://physionet-open/mitdb/1.0.0/`，原始 `100.hea` URL 也轉向同路徑的官方 S3 HTTPS 主機。因此下載器補上相容性：每次跟隨轉址前，只允許原 PhysioNet URL 或 `https://physionet-open.s3.amazonaws.com/mitdb/1.0.0/` 下完全相同檔名；不同主機、版本、檔名或額外查詢參數均拒絕。manifest 同時保留原始 `source_url` 與實際 `resolved_url`。這項修正沒有變更資料版本、清單、標註或演算法。
 
 ```sh
 # 在 repo 根目錄；本機 Python 可使用 lab410 的直譯器。
@@ -32,6 +36,8 @@ PYTHONPATH=src python scripts/validate_beat_timing.py spotcheck --output-dir rep
 ```
 
 下載器固定只向 PhysioNet 1.0.0 取這六筆的 `.hea`、`.dat`、`.atr`，約 12 MB，無需帳密；輸出目錄已有 manifest 時拒絕覆寫。`check-data` 在評估前驗證完整清單、來源、大小與 SHA-256。benchmark 會列出每筆預定窗數、原生／125 Hz 成功及失敗數、完整候選可用窗數與逐窗結果，任何失敗窗均保留並使命令失敗，不靜默排除。輸出為 `benchmark_summary.json`，不含波形或 ICU 資料；公有 CI 可只上傳彙總，無須上傳原始參考資料。
+
+CI 另輸出一行 `PILOT_SUMMARY_JSON=`，其內容也保留在完整 JSON 的 `compact_summary`。每個取樣率、方法分開加總成功評估窗的 reference／detected／matched 搏數及 micro sensitivity／PPV，同時呈現總窗數、失敗窗數與完整候選窗數。定位誤差是各窗中位數的中位數與各窗 p95 的中位數，**後者不是 pooled p95**；RR 是各窗共同原始相鄰 RR 的 MAE 中位數，RMSSD 是各窗共同三搏差異的 signed／absolute 中位數，均附可用窗數。每個方法分別與標註配對，其可評估子集可能不同，因此不能將兩種方法彙總值的差直接視為相同搏動集合的配對效果。
 
 截至本機執行，本機未找到既有獨立 `.atr`／`.qrs`／`.qrsc`，PhysioNet DNS 無法解析，官方 WFDB GitHub sample-data 的二進位亦無法經文字 fetch 取得。因此本機尚未完成公開標註 pilot；上述下載＋benchmark 已準備讓可連網的普通 CI 執行，執行後才能登錄實測數字。若 CI 亦無法連線，最小資源需求就是從官方下載這 18 個檔案（六筆各三檔）及其來源版本，不需要新的 ICU 資料或 API 金鑰。更完整的驗證仍需未用於方法開發的資料、節律／NN 資格與 ICU 雙人盲標。
 

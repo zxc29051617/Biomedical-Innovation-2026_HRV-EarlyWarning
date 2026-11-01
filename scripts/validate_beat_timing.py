@@ -18,7 +18,7 @@ import numpy as np
 import wfdb
 from wfdb.processing import xqrs_detect
 
-from download_reference_ecg import validate_plan
+from download_reference_ecg import validate_plan, validate_reference_url
 from hrv_early_warning.beat_timing import (
     align_fiducials, evaluate_timing, provenance, quantization_reference,
     resample_for_timing, rr_features,
@@ -71,9 +71,55 @@ def checked_manifest(manifest_path):
             raise ValueError("reference_file_outside_data_root")
         if entry.get("source_url") != plan["download_base"] + entry["path"]:
             raise ValueError("reference_file_not_from_official_source")
+        validate_reference_url(entry.get("resolved_url"), entry["path"])
         if file.stat().st_size != entry["bytes"] or sha256(file) != entry["sha256"]:
             raise ValueError("reference_file_hash_or_size_mismatch")
     return manifest
+
+
+def compact_summary(report):
+    """Summarize existing window outputs without changing evaluation rules."""
+    summary = {"schema_version": "beat_timing_compact_summary_v1",
+               "algorithm_version": report["candidate"]["algorithm_version"],
+               "metric_version": report["candidate"]["metric_version"],
+               "scope": report["scope"],
+               "aggregation": "Detection totals pool evaluated windows at each sampling rate; failed windows are counted separately. Timing and RR summaries are medians of window statistics, never pooled beat-level percentiles. Each method uses its own reference-matched adjacent pairs/triplets; subsets can differ.",
+               "by_sampling_rate": {}}
+
+    def median_or_none(values):
+        values = [value for value in values if value is not None]
+        return float(np.median(values)) if values else None
+
+    for fs in sorted({row["fs_hz"] for row in report["windows"]}):
+        planned = [row for row in report["windows"] if row["fs_hz"] == fs]
+        evaluated = [row for row in planned if row["status"] == "evaluated"]
+        group = {"total_windows": len(planned), "evaluated_windows": len(evaluated),
+                 "failed_windows": len(planned) - len(evaluated),
+                 "reference_beats_in_all_planned_windows": sum(row["reference_beat_count"] for row in planned),
+                 "full_candidate_windows": sum(not row["consistent_fiducial"]["full_window_rr"]["candidate_abstention"] for row in evaluated),
+                 "methods": {}}
+        for name in ("baseline_xqrs", "consistent_fiducial"):
+            windows = [row[name] for row in evaluated]
+            totals = {key: sum(window["detection"][key] for window in windows)
+                      for key in ("reference_count", "detected_count", "matched_count")}
+            reference, detected, matched = (totals[key] for key in ("reference_count", "detected_count", "matched_count"))
+            timing = [window["timing_error"] for window in windows if window["timing_error"]["count"]]
+            rr = [window["shared_adjacent_rr_error"] for window in windows if window["shared_adjacent_rr_error"]["count"]]
+            triplets = [window["shared_adjacent_triplets"] for window in windows if window["shared_adjacent_triplets"]["count"]]
+            group["methods"][name] = {
+                "evaluated_windows": len(windows), "detection_totals": totals,
+                "micro_sensitivity": matched / reference if reference else None,
+                "micro_ppv": matched / detected if detected else None,
+                "timing": {"usable_windows": len(timing),
+                           "median_of_window_absolute_median_ms": median_or_none([item["absolute_median_ms"] for item in timing]),
+                           "median_of_window_absolute_p95_ms_NOT_pooled_p95": median_or_none([item["absolute_p95_ms"] for item in timing])},
+                "shared_original_adjacent_rr": {"usable_windows": len(rr),
+                           "median_of_window_mae_ms": median_or_none([item["mae_ms"] for item in rr])},
+                "shared_original_adjacent_triplet_rmssd": {"usable_windows": len(triplets),
+                           "median_of_window_signed_difference_ms": median_or_none([item["rmssd_difference_ms"] for item in triplets]),
+                           "median_of_window_absolute_difference_ms": median_or_none([abs(item["rmssd_difference_ms"]) for item in triplets])}}
+        summary["by_sampling_rate"][str(fs)] = group
+    return summary
 
 
 def benchmark(manifest_path, output_path):
@@ -160,7 +206,9 @@ def benchmark(manifest_path, output_path):
         print(f"Annotation pilot {item['record']}: {record_summary['evaluated_windows_by_fs']} evaluated; {record_summary['failed_windows_by_fs']} failed", flush=True)
     report["window_status_counts"] = dict(Counter(row["status"] for row in report["windows"]))
     report["complete"] = all(row["status"] == "evaluated" for row in report["windows"])
+    report["compact_summary"] = compact_summary(report)
     (output / "benchmark_summary.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    print("PILOT_SUMMARY_JSON=" + json.dumps(report["compact_summary"], separators=(",", ":"), allow_nan=False), flush=True)
     if not report["complete"]:
         raise RuntimeError("annotation_pilot_contains_failed_windows_see_report")
 
