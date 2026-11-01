@@ -1,0 +1,26 @@
+{
+  "schema_version": "beat_timing_reference_plan_v1",
+  "dataset": "MIT-BIH Arrhythmia Database",
+  "dataset_key": "mitdb",
+  "version": "1.0.0",
+  "source_url": "https://physionet.org/content/mitdb/1.0.0/",
+  "download_base": "https://physionet.org/files/mitdb/1.0.0/",
+  "license": "Open Data Commons Attribution License v1.0",
+  "citation": "Moody GB, Mark RG. The impact of the MIT-BIH Arrhythmia Database. IEEE Eng Med Biol Mag. 2001;20(3):45-50. doi:10.1109/51.932724",
+  "annotation_kind": "expert_reviewed_beats_with_subsequent_peak_alignment",
+  "annotation_limitations": "Reviewed beat labels; later fiducial peak alignment, analog timing and lead-skew uncertainty. Not error-free manual timing truth; no automatic sinus NN qualification.",
+  "purpose": "prespecified_external_annotation_engineering_pilot",
+  "selection_status": "Six records specified before running candidate; no record or window selection by outcomes",
+  "threshold_status": "No clinically justified acceptance limits or locked heldout signal partition",
+  "epoch_seconds": 300,
+  "target_sampling_rates_hz": [125],
+  "match_tolerance_seconds": 0.1,
+  "records": [
+    {"record": "100", "subject_group": "mitdb_100", "channel": 0, "annotator": "atr", "role": "development_pilot"},
+    {"record": "118", "subject_group": "mitdb_118", "channel": 0, "annotator": "atr", "role": "development_pilot"},
+    {"record": "119", "subject_group": "mitdb_119", "channel": 0, "annotator": "atr", "role": "development_pilot"},
+    {"record": "200", "subject_group": "mitdb_200", "channel": 0, "annotator": "atr", "role": "development_pilot"},
+    {"record": "207", "subject_group": "mitdb_207", "channel": 0, "annotator": "atr", "role": "development_pilot"},
+    {"record": "214", "subject_group": "mitdb_214", "channel": 0, "annotator": "atr", "role": "development_pilot"}
+  ]
+}

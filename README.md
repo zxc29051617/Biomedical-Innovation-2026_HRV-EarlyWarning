@@ -6,6 +6,18 @@
 
 本專案以既有 `fish_yang_MI` 的 ECG 與 HRV 研究經驗為基礎，建立獨立、可重跑的重症預警研究管線。第一版使用 MIMIC-III 成人 MetaVision ICU 資料，研究「未來 6 小時內首次開始持續使用升壓劑」的風險；敗血症是預先指定的重點分析子群。
 
+## 直接操作展示
+
+下載或 clone 此 repo，直接用瀏覽器開啟 **[web/index.html](web/index.html)**；不需安裝套件或連線。包含三個合成病例、播放與時間滑桿、五組模型切換、風險與生命徵象圖、RR 品質拒絕狀態，以及真實研究彙總結果。GitHub 檔案預覽不會執行網頁，請下載後開啟。
+
+也可以從 repo 根目錄執行 `python scripts/serve_demo.py`，再開啟終端顯示的本機網址。若環境不允許開啟監聽埠，直接開 HTML 即可。操作與三分鐘展示腳本見 [demo walkthrough](docs/demo_walkthrough.md)。
+
+**合成分數只用來展示互動，不能作為預警成效證據。** 本機真實病例可由 `python scripts/export_replay.py` 從完成的 M2 快取與已存模型匯出，再以介面的「匯入本機病例 JSON」開啟 `artifacts/replay/replay.json`。此匯出需要原本的受控資料環境與模型依賴；公開 repo 不包含患者資料或模型權重。匯入只留在瀏覽器記憶體，沒有上傳、網路請求或持久儲存。
+
+執行 `python scripts/package_demo.py` 可產生只含四個公開網頁資產與使用說明的 `artifacts/releases/HRV-EarlyWarning-demo.zip`。CI 使用合成資料測試瀏覽器操作；獨立的公開 ECG 工作流程驗證候選搏動定位，均不需 MIMIC 存取權限。驗收方法見 [產品交付紀錄](docs/product_delivery.md)。
+
+## 研究現況
+
 核心研究問題：**在相同誤報負擔下，HRV 與個人過去的變化，能否比心率、血壓等常規資訊更早辨識事件？** 模型預測的是給藥紀錄中的事件，不直接判定敗血性休克或治療必要性。
 
 目前完成資料盤點、成人 ICU 資格、首次持續升壓劑事件、同次 ICU 波形配對，以及全量 ECG 解碼、工程品質篩選與五組開發模型比較。醫學與資料定義見[臨床證據審查](docs/clinical_evidence.md)，訊號規則見[訊號品質依據](docs/signal_quality_evidence.md)。工程品質通過不代表已確認正常心律或臨床 HRV；保留測試尚未用於模型評估。
@@ -120,6 +132,9 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [M2 風險集合、訊號工作與開發基準](docs/m2_results.md)
 - [M2 全量訊號、配對模型與實際誤報結果](docs/m2_signal_model_results.md)
 - [v2 搏動定位與 RR 量測驗證準備](docs/rr_validation_v2.md)
+- [一致搏動定位候選與固定公開 ECG 試行](docs/beat_timing_validation.md)
+- [展示操作與三分鐘導覽](docs/demo_walkthrough.md)
+- [產品交付與驗收紀錄](docs/product_delivery.md)
 - [前作與來源](docs/references.md)
 - [機器可讀規格](configs/protocol.toml)
 - `src/hrv_early_warning/inventory.py`：可重跑的資料盤點。

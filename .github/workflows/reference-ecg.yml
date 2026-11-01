@@ -1,0 +1,39 @@
+name: Fixed public ECG engineering pilot
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/hrv_early_warning/beat_timing.py
+      - scripts/download_reference_ecg.py
+      - scripts/validate_beat_timing.py
+      - configs/beat_timing_reference.json
+      - .github/workflows/reference-ecg.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reference-ecg:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -c configs/requirements-ci.txt -e '.[signal]'
+      - name: Download the prespecified official reference records
+        run: python scripts/download_reference_ecg.py --output-dir artifacts/rr_validation/reference
+        env:
+          PYTHONPATH: src
+      - name: Evaluate frozen candidate against independent annotations
+        run: python scripts/validate_beat_timing.py benchmark --manifest artifacts/rr_validation/reference/manifest.json --output-dir artifacts/rr_validation/pilot
+        env:
+          PYTHONPATH: src
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: public-ecg-pilot-aggregate
+          # Only aggregate results. Never publish the downloaded ECG itself.
+          path: artifacts/rr_validation/pilot/
+          retention-days: 7
+          if-no-files-found: warn

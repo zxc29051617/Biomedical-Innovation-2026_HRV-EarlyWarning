@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="循環風險與訊號品質的回溯研究原型：病例重播、資料覆蓋與完整研究證據。">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>HRV Early Warning · 循環風險觀察</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="demo-data.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳至主要內容</a>
+  <header class="app-header">
+    <a class="brand" href="#replay" aria-label="HRV Early Warning 首頁">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="11"></rect><path d="M7 21h7l3-9 5 17 3-8h8"></path></svg>
+      <span><strong>HRV EARLY WARNING</strong><small>循環風險觀察</small></span>
+    </a>
+    <nav class="main-nav" aria-label="主要功能">
+      <button type="button" class="nav-button active" data-view="replay" aria-current="page">病例重播</button>
+      <button type="button" class="nav-button" data-view="evidence">研究證據</button>
+      <button type="button" class="nav-button" data-view="guide">使用說明</button>
+    </nav>
+    <span class="research-label"><span class="status-dot"></span>回溯研究原型</span>
+  </header>
+
+  <main id="main-content">
+    <div id="app-message" class="app-message" role="status" aria-live="polite" hidden></div>
+    <section id="view-replay" class="view replay-layout" aria-label="病例重播">
+      <aside class="sidebar">
+        <div class="sidebar-heading"><span class="eyebrow">REPLAY LIBRARY</span><h1>選擇觀察情境</h1><p>沿著時間，檢視風險與資料品質。</p></div>
+        <div id="case-list" class="case-list" aria-label="病例清單"></div>
+        <div class="source-card">
+          <span class="eyebrow">資料來源</span>
+          <p id="source-description"></p>
+          <span id="source-mode" class="pill amber">合成展示</span>
+          <div class="source-actions">
+            <label class="button secondary upload-button" for="import-file">匯入本機病例 JSON</label>
+            <input id="import-file" class="visually-hidden" type="file" accept=".json,application/json">
+            <button id="restore-demo" type="button" class="text-button">回到合成展示</button>
+          </div>
+          <p class="microcopy">匯入內容只留在這次瀏覽器記憶體；不傳送網路，也不存入瀏覽器儲存空間。</p>
+          <p id="import-error" class="error-text" role="alert" hidden></p>
+        </div>
+        <div class="sidebar-note"><strong>觀察重點</strong><p>先確認訊號是否足以出分，再比較當下與歷史趨勢。沒有分數，並不代表沒有風險。</p></div>
+      </aside>
+
+      <div class="workspace">
+        <div class="workspace-heading">
+          <div><span class="eyebrow">CIRCULATORY RISK REVIEW</span><h2 id="case-title">循環風險觀察</h2><p id="case-description" class="subtitle"></p></div>
+          <button id="export-summary" type="button" class="button secondary">匯出目前觀察</button>
+        </div>
+        <div id="mode-notice" class="mode-notice"><strong id="score-kind">合成示意分數</strong><span id="mode-explanation">這是介面情境展示，不是患者資料或模型預測成績。</span></div>
+
+        <div class="overview-grid">
+          <article class="card score-card">
+            <div class="card-label"><span id="score-label">合成示意分數</span><span class="tiny-label">未來 6 小時</span></div>
+            <div class="score-line"><strong id="risk-value">—</strong><span id="risk-unit">%</span></div>
+            <div id="risk-state" class="pill teal">等待重播</div>
+            <p id="risk-context" class="microcopy"></p>
+          </article>
+          <article class="card quality-card">
+            <div class="card-label"><span>目前 ECG 工程品質</span><span id="quality-symbol" class="quality-symbol" aria-hidden="true">○</span></div>
+            <h3 id="quality-title">—</h3><p id="quality-detail"></p>
+            <span class="tiny-label">正常 NN／節律適用性尚未確認</span>
+          </article>
+          <article class="card history-card">
+            <div class="card-label"><span>六小時取樣覆蓋</span><span class="tiny-label">每小時最後 5 分鐘</span></div>
+            <div class="coverage-number"><strong id="coverage-count">—</strong><span>/ 6 個片段</span></div>
+            <div id="coverage-blocks" class="coverage-blocks" aria-label="最近六個逐小時片段品質"></div>
+            <p id="coverage-note" class="microcopy">六個片段不等於連續六小時 ECG。</p>
+          </article>
+        </div>
+
+        <article class="card risk-chart-card">
+          <div class="panel-header"><div><span class="eyebrow">RISK TIMELINE</span><h3>風險時間軸</h3></div><label class="model-select-label">檢視模型<select id="model-select"><option value="paired_history_rr">常規資訊＋歷史 RR</option><option value="paired_vitals">配對常規資訊</option><option value="paired_current_rr">常規資訊＋當下 RR</option><option value="paired_history_trend_rr">常規資訊＋歷史 RR＋斜率</option><option value="vitals_all">全風險集合常規基準</option></select></label></div>
+          <div class="chart-legend"><span><i class="legend-line teal-line"></i><span id="selected-model-legend">所選模型</span></span><span id="baseline-legend"><i class="legend-line gray-line"></i>配對常規資訊</span><span><i class="legend-line threshold-line"></i><span id="threshold-label">示意通知門檻</span></span></div>
+          <div id="risk-chart" class="chart-host" aria-label="風險分數時間軸"></div>
+          <div class="chart-footer"><p id="threshold-note"></p><label class="checkbox-label"><input id="show-event" type="checkbox">顯示已到達的回溯事件</label></div>
+          <div id="outcome-note" class="outcome-note" hidden></div>
+        </article>
+
+        <div class="replay-controls card">
+          <div class="transport"><button id="rewind" class="icon-button" type="button" aria-label="回到重播起點" title="回到起點">↤</button><button id="play-pause" class="button primary" type="button" aria-pressed="false">播放</button><button id="step" class="icon-button" type="button" aria-label="前進一個資料時點" title="前進一步">→</button></div>
+          <div class="timeline-control"><div class="time-labels"><span id="current-time">ICU +— 小時</span><span id="replay-position"></span></div><label class="visually-hidden" for="timeline">目前重播資料時點</label><input id="timeline" type="range" min="0" max="1" value="0" step="1"></div>
+          <label class="speed-control">速度<select id="playback-speed"><option value="1600">1×</option><option value="800">2×</option><option value="400">4×</option></select></label>
+        </div>
+
+        <div class="section-heading"><h3>生命徵象</h3><span>只呈現目前重播時間以前的觀察值</span></div>
+        <div id="vital-grid" class="vital-grid"></div>
+        <div class="lower-grid">
+          <article class="card rr-card"><div class="panel-header"><div><span class="eyebrow">RR INTERVALS</span><h3>RR 變異觀察</h3></div><span class="pill neutral">工程候選特徵</span></div><div class="rr-values"><div><span>平均 RR</span><strong id="mean-rr">—</strong><small>ms</small></div><div><span>SDRR</span><strong id="sdrr">—</strong><small>ms</small></div><div><span>RMSSD of RR</span><strong id="rmssd">—</strong><small>ms</small></div></div><div class="chart-legend"><span><i class="legend-line teal-line"></i>RMSSD of RR</span><span><i class="legend-line blue-line"></i>SDRR</span></div><div id="rr-chart" class="chart-host small-chart"></div><p class="microcopy">拒絕或缺少的片段留白，不接線、不補值；RR 變異尚未證實等同生理 HRV。</p></article>
+          <article class="card observations-card"><div class="panel-header"><div><span class="eyebrow">REVIEW NOTES</span><h3>目前觀察</h3></div></div><ul id="observation-list" class="observation-list"></ul><div class="notification-summary"><span id="notification-label">到目前為止的示意通知</span><strong id="notification-count">0</strong><small>依所選模型門檻，六小時內不重複通知。</small></div></article>
+        </div>
+        <p class="workspace-disclaimer">終點是「首次持續升壓劑輸注開始」，不等同敗血性休克診斷或用藥建議。研究原型尚未完成保留測試與臨床驗證。</p>
+      </div>
+    </section>
+
+    <section id="view-evidence" class="view document-view" aria-labelledby="evidence-title" hidden>
+      <div class="document-heading"><span class="eyebrow">EVIDENCE, NOT ASSUMPTIONS</span><h1 id="evidence-title">完整呈現研究結果</h1><p>以下來自真實 MIMIC-III 開發驗證，與合成病例展示分開呈現。</p></div>
+      <div class="evidence-callout"><span class="pill amber">第一版結果</span><h2>尚無清楚證據支持歷史 RR 或趨勢增益</h2><p>加入當下 RR 的 AUPRC 反而下降。搏動定位仍有已知缺口；工程品質通過不代表正常 NN-HRV。保留測試模型評估尚未進行。</p></div>
+      <div class="evidence-stat-grid"><article class="card"><strong>340,354</strong><span>已完成 ECG 片段</span></article><article class="card"><strong>142,489</strong><span>工程篩選通過 · 41.86%</span></article><article class="card"><strong>244 / 1,529</strong><span>至少一個可評分時點的事件</span></article><article class="card"><strong>11.62%</strong><span>配對驗證觀察時間覆蓋</span></article></div>
+      <article class="card evidence-table-card"><div class="panel-header"><div><span class="eyebrow">PAIRED DEVELOPMENT VALIDATION</span><h2>相同時窗上的比較</h2><p>630 位患者 · 16,275 個非截尾時窗 · 41 個事件</p></div></div><div class="table-scroll"><table><caption class="visually-hidden">配對開發驗證模型結果與 AUPRC 差值區間</caption><thead><tr><th scope="col">模型</th><th scope="col">AUROC</th><th scope="col">AUPRC</th><th scope="col">ΔAUPRC [95% 區間]</th></tr></thead><tbody><tr><th scope="row">常規資訊</th><td>0.59772</td><td>0.02419</td><td>比較基準</td></tr><tr><th scope="row">＋當下 RR</th><td>0.60074</td><td>0.01969</td><td>−0.00449 [−0.01190, −0.00071]</td></tr><tr><th scope="row">＋歷史 RR</th><td>0.60297</td><td>0.02698</td><td>0.00279 [−0.00612, 0.02035]</td></tr><tr><th scope="row">＋歷史 RR 與斜率</th><td>0.59553</td><td>0.02084</td><td>−0.00335 [−0.01183, 0.00546]</td></tr></tbody></table></div><p class="microcopy table-note">差值為加入 RR 減常規模型；200 次共同患者 bootstrap、固定預測、不重訓，未校正三組多重比較。不同模型的實際誤報負擔不同。全族群生命徵象模型的評估族群不同，不直接相減比較。</p></article>
+      <div class="evidence-columns"><article class="card"><h3>可重跑的研究基礎</h3><ul class="plain-list"><li>患者隔離，訓練患者擬合補值與標準化。</li><li>保留完整逐小時風險集合與自然事件比例。</li><li>品質拒絕、截尾及未評分時間保留於報告。</li><li>五組模型、所有配對差值完整呈現。</li></ul></article><article class="card"><h3>下一個驗證關卡</h3><ul class="plain-list"><li>獨立標註 ECG 的搏動定位與 RR 誤差。</li><li>真實 ICU 品質規則的誤拒與漏拒。</li><li>正常心律與 NN 間期適用性。</li><li>相同 ECG 心率／歷史對照與固定誤報比較。</li></ul></article></div>
+      <div class="document-links"><a href="https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/blob/main/docs/m2_signal_model_results.md" target="_blank" rel="noopener noreferrer">完整研究結果 ↗</a><a href="https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/blob/main/docs/protocol.md" target="_blank" rel="noopener noreferrer">研究規格與時間界線 ↗</a></div>
+    </section>
+
+    <section id="view-guide" class="view document-view" aria-labelledby="guide-title" hidden>
+      <div class="document-heading"><span class="eyebrow">A REPLAY YOU CAN INSPECT</span><h1 id="guide-title">從一個時點開始觀察</h1><p>這個原型讓團隊檢視模型分數、生理趨勢與資料品質如何隨時間變化。</p></div>
+      <div class="guide-steps"><article class="card"><span class="step-number">01</span><h2>選擇情境</h2><p>三個合成病例展示穩定、循環變化與訊號間斷。分數由情境產生，不是訓練模型的效能證據。</p></article><article class="card"><span class="step-number">02</span><h2>逐步重播</h2><p>使用播放、前進或滑桿切換時點。圖表不顯示未來資料，沒有觀察的時間保持空白。</p></article><article class="card"><span class="step-number">03</span><h2>先看品質</h2><p>RR 品質不合格時不顯示 RR 模型分數。工程通過仍需要另外確認心律與定位準確度。</p></article><article class="card"><span class="step-number">04</span><h2>核對證據</h2><p>在研究證據頁看完整開發結果、覆蓋率與不確定性；匯出摘要保留目前時點與來源標示。</p></article></div>
+      <article class="card guide-import"><h2>使用自己的本地研究病例</h2><p>匯入符合 <code>hrv-replay-v1</code> 的 JSON。頁面只接受指定欄位與有限數值，並檢查時間排序、品質與分數是否一致；資料只在瀏覽器記憶體中使用。</p><p>真實研究模式顯示匯出程式提供的已儲存模型分數；此頁本身不訓練模型、不重新計算 ECG，也不會上傳你的檔案。關閉頁面後，匯入資料不會保留。</p><p>真實患者層級檔案應留在本機。分享研究成果時，使用彙總報告與合成展示。</p></article>
+      <article class="card"><h2>分數與通知的意思</h2><p>模型研究目標為未來六小時首次開始持續至少六十分鐘的指定升壓劑輸注。門檻採各模型訓練陰性分數第 99 百分位；越過門檻後六小時內不重複計數。這項規則尚未完成臨床工作負擔驗證，分數不能直接解讀為已校準的個人風險或診斷。</p><p>病例中的缺值保留空白。當下沒有可用分數不等於沒有風險，品質通過也不代表已排除 AF、pacing 或異位心搏。</p></article>
+      <button type="button" class="button primary" data-view="replay">開始病例重播</button>
+    </section>
+  </main>
+  <footer class="app-footer"><span>HRV Early Warning · 自主團隊研究專案</span><span>研究原型 v1 · 本機處理 · 無外部資料傳輸</span></footer>
+  <noscript><div class="noscript">此重播介面需要啟用 JavaScript。研究結果仍可從專案文件閱讀。</div></noscript>
+</body>
+</html>
