@@ -9,6 +9,6 @@ This is an independent HRV early-warning research repository. The parent directo
 - Separate observed treatment initiation from clinical need or a septic-shock diagnosis. Report unknown data coverage and censoring explicitly.
 - Split patients before fitting preprocessing or selecting models. Keep test results out of model and feature selection.
 - Run relevant tests with `PYTHONPATH=src python -m unittest discover -s tests -v`.
-- The CLI supports `audit`, `protocol`, `feasibility`, `vitals`, `signals`, `develop`, and `status`. Signal acceptance is an engineering RR screen, not confirmed sinus NN-based HRV or AF/pacing exclusion. Check artifact completion and report scope before claiming full results. The UI and clinical validation are not implemented.
+- The CLI supports `audit`, `protocol`, `feasibility`, `vitals`, `signals`, `develop`, `compare`, and `status`. Signal acceptance is an engineering RR screen, not confirmed sinus NN-based HRV or AF/pacing exclusion. Check artifact completion and report scope before claiming full results. The UI and clinical validation are not implemented.
 - Use the fixed full-cohort patient split in `artifacts/m2/patient_split.json`. Model development never reads held-out test features or scores. Extra dense event-audit epochs must not enter the hourly model features.
 - Signal/model tests require optional dependencies. Use the project's documented tested Python environment; a skipped dependency test is not evidence that the signal/model implementation passed.

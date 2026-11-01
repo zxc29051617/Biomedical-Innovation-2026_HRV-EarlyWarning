@@ -82,9 +82,13 @@ PYTHONPATH=src python -m hrv_early_warning signals \
   --paths configs/paths.local.toml --workers 8 --output reports/local/signals.json
 PYTHONPATH=src python -m hrv_early_warning develop \
   --paths configs/paths.local.toml --output reports/local/development.json
+PYTHONPATH=src python -m hrv_early_warning compare \
+  --work-dir artifacts/m2 --replicates 200
 ```
 
-也可指定已安裝依賴的 Python 後執行 `HRV_PYTHON=/path/to/python sh scripts/run_m2.sh`，依序完成生命徵象、訊號及開發模型。
+也可指定已安裝依賴的 Python 後執行 `HRV_PYTHON=/path/to/python sh scripts/run_m2.sh`，依序完成資料可行性、生命徵象、訊號、開發模型與配對比較。
+
+`compare` 需全量 ECG 與四組配對模型都已完成；固定已訓練模型，在相同開發驗證患者與時窗上重抽患者 200 次，計算加入 RR 特徵的指標差及 95% 區間，不重訓或讀取保留測試。彙總預設寫入 `artifacts/m2/paired_comparison.json`，可用 `--output` 改位置。它預設讀取 `configs/paths.local.toml` 以保護來源目錄，可用 `--paths` 指定其他設定。區間未包含訓練不確定性，也未校正多重比較。
 
 使用 `PYTHONPATH=src python -m hrv_early_warning status` 查詢進度。若訊號工作已另行啟動，`PYTHONPATH=src python scripts/finalize_m2.py` 可等待完整快取後接續建模；它不啟動另一份 ECG 工作，預設最多等候 24 小時。工作失敗會留下明確狀態，不能將等待程式仍在執行當成訊號工作成功。
 

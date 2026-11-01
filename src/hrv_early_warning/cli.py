@@ -63,6 +63,11 @@ def main(argv: list[str] | None = None) -> int:
     develop.add_argument("--feasibility-dir", type=Path, default=Path("artifacts/feasibility"))
     develop.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
     develop.add_argument("--output", type=Path)
+    compare = commands.add_parser("compare", help="Paired patient-bootstrap comparison of completed development models; test locked")
+    compare.add_argument("--paths", type=Path, default=Path("configs/paths.local.toml"), help="Dataset paths used to protect source directories from report writes")
+    compare.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
+    compare.add_argument("--replicates", type=int, default=200)
+    compare.add_argument("--output", type=Path, help="Aggregate JSON; defaults to WORK_DIR/paired_comparison.json")
     status = commands.add_parser("status", help="Read aggregate cache completion; never reports a partial result as final")
     status.add_argument("--work-dir", type=Path, default=Path("artifacts/m2"))
     protocol = commands.add_parser("protocol", help="Display the study specification; does not train a model")
@@ -80,12 +85,23 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "audit" and args.headers < 0:
             raise ValueError("--headers must be nonnegative")
+        if args.command == "compare":
+            if args.replicates < 1:
+                raise ValueError("--replicates must be positive")
+            if args.output is None:
+                args.output = args.work_dir / "paired_comparison.json"
         clinical_root, waveform_root = load_paths(args.paths)
         if args.output and any(args.output.resolve().is_relative_to(root) for root in (clinical_root, waveform_root)):
             raise ValueError("Report output must be outside both source dataset directories")
-        if args.command in {"signals", "vitals", "develop"}:
+        if args.command in {"signals", "vitals", "develop", "compare"}:
             if any(args.work_dir.resolve().is_relative_to(root) for root in (clinical_root, waveform_root)):
                 raise ValueError("Private work directory must be outside both source dataset directories")
+            if args.command == "compare":
+                from .model_comparison import compare_saved_models
+                compare_saved_models(args.work_dir / "model_table.sqlite", args.work_dir / "models",
+                                     args.output, replicates=args.replicates)
+                print(f"Aggregate paired comparison saved to {args.output.resolve()}")
+                return 0
             progress = lambda message: print(message, file=sys.stderr, flush=True)
             if args.command == "signals":
                 from .signal_pipeline import run_signal_screen

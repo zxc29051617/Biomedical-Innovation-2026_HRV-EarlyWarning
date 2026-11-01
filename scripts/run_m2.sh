@@ -13,3 +13,4 @@ hrv_work="${HRV_WORK_DIR:-artifacts/m2}"
 "$hrv_python" -m hrv_early_warning vitals --paths "$hrv_paths" --work-dir "$hrv_work" --output reports/local/vitals.json
 "$hrv_python" -m hrv_early_warning signals --paths "$hrv_paths" --work-dir "$hrv_work" --output reports/local/signals.json
 "$hrv_python" -m hrv_early_warning develop --paths "$hrv_paths" --work-dir "$hrv_work" --output reports/local/development.json
+"$hrv_python" -m hrv_early_warning compare --paths "$hrv_paths" --work-dir "$hrv_work" --replicates 200
