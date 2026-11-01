@@ -34,10 +34,10 @@ python scripts/serve_demo.py
 
 此步驟需要本機已有完整 M2 產物、可信的模型檔及科學計算環境。介面本身不解碼 ECG、不重新訓練模型，也不從網站下載患者資料。
 
-目前工作機可在專案根目錄執行：
+使用已安裝 `signal,model` 依賴的 Python，在專案根目錄執行：
 
 ```sh
-/home/zxc29051617/miniforge3/envs/lab410/bin/python scripts/export_replay.py
+python scripts/export_replay.py
 ```
 
 匯出預設只使用 `validation`。程式檢查訊號完成狀態、來源指紋、固定患者切分、模型與門檻的一致性，再使用既有五組模型產生分數；不開啟保留測試特徵、不重訓。選例使用預先指定的類別與固定雜湊排名，私有選例 manifest 在預測前保存，不根據分數挑選病例。

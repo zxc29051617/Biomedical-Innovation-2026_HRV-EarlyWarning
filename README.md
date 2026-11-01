@@ -16,6 +16,8 @@
 
 執行 `python scripts/package_demo.py` 可產生只含四個公開網頁資產與使用說明的 `artifacts/releases/HRV-EarlyWarning-demo.zip`。CI 使用合成資料測試瀏覽器操作；獨立的公開 ECG 工作流程驗證候選搏動定位，均不需 MIMIC 存取權限。驗收方法見 [產品交付紀錄](docs/product_delivery.md)。
 
+**已驗收：364 項 Python 測試、11 組 Chromium 操作檢查、桌機／手機版及本機 HTTP 服務。** 線上 Site 尚未部署；目前使用下載後的離線版。另完成固定公開標註 ECG 的 72 組評估，候選方法有明顯棄權代價，因此尚未替換原模型管線；詳見[實測結果](docs/beat_timing_validation.md)。
+
 ## 研究現況
 
 核心研究問題：**在相同誤報負擔下，HRV 與個人過去的變化，能否比心率、血壓等常規資訊更早辨識事件？** 模型預測的是給藥紀錄中的事件，不直接判定敗血性休克或治療必要性。

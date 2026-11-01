@@ -14,7 +14,7 @@
 
 對原取樣率與抗混疊 resample_poly 至 125 Hz 的訊號分開跑未改動的 XQRS 與候選；標註保留原取樣率的秒數，**不四捨五入到 125 Hz**。另報將參考秒數單純量化到 125 Hz 格點的誤差，作為量化對照，而非可達精度保證。125 Hz 一個樣點為 8 ms，濾波、取樣相位及定位誤差可能相加或抵消。
 
-一對一配對以時間順序的動態規劃優先最大化配對數，再最小化絕對時間差；配對容許 100 ms 僅用來決定對應。各方法分開報 sensitivity、PPV、F1、漏搏／多餘搏動；已配對搏動另報 signed bias、絕對時間誤差的中位數／95 百分位／最大值。RR 僅採兩方法與標註中都原始相鄰的兩搏；RMSSD 比較僅採共同原始相鄰三搏，另報整個五分鐘窗全 RR 的 mean RR、SDRR、RMSSD 差異及候選棄權情況。不以僅成功配對的誤差掩蓋漏搏或棄權。
+一對一配對以時間順序的動態規劃優先最大化配對數，再最小化絕對時間差；配對容許 100 ms 僅用來決定對應。各方法分開報 sensitivity、PPV、F1、漏搏／多餘搏動；已配對搏動另報 signed bias、絕對時間誤差的中位數／95 百分位／最大值。每個方法分別與標註配對：RR 僅採該方法偵測序列與標註中皆原始相鄰的兩搏；RMSSD 僅採這兩個序列中共同原始相鄰的三搏。兩方法保留的搏動子集可能不同。另報整個五分鐘窗全 RR 的 mean RR、SDRR、RMSSD 差異及候選棄權情況。不以僅成功配對的誤差掩蓋漏搏或棄權。
 
 MIT-BIH 標籤可描述搏動種類，但單一 `N` 不足以確認整個窗為正常竇性 NN。此階段全部稱 RR，保留逐類別計數，不提供臨床 NN-HRV 合格率。人工審閱標註仍有定位不確定性及後續自動峰值對齊；並非無誤差的逐樣本人為真值。後續 NSTDB、Fantasia、LUDB 及 ICU 雙人盲標的分組／節律資格設計見 [v2 驗證準備](rr_validation_v2.md)。
 
@@ -27,7 +27,7 @@ MIT-BIH 標籤可描述搏動種類，但單一 `N` 不足以確認整個窗為�
 第一輪 CI 實際在第一個檔案的官方轉址檢查失敗，未產生 benchmark 結果。查核 [PhysioNet 官方 Files 說明](https://physionet.org/content/mitdb/1.0.0/#files-panel) 明列 `s3://physionet-open/mitdb/1.0.0/`，原始 `100.hea` URL 也轉向同路徑的官方 S3 HTTPS 主機。因此下載器補上相容性：每次跟隨轉址前，只允許原 PhysioNet URL 或 `https://physionet-open.s3.amazonaws.com/mitdb/1.0.0/` 下完全相同檔名；不同主機、版本、檔名或額外查詢參數均拒絕。manifest 同時保留原始 `source_url` 與實際 `resolved_url`。這項修正沒有變更資料版本、清單、標註或演算法。
 
 ```sh
-# 在 repo 根目錄；本機 Python 可使用 lab410 的直譯器。
+# 在 repo 根目錄，使用已安裝 signal 依賴的 Python。
 PYTHONPATH=src python -m unittest discover -s tests -p test_beat_timing.py -v
 python scripts/download_reference_ecg.py --output-dir artifacts/rr_validation/reference
 PYTHONPATH=src python scripts/validate_beat_timing.py check-data --manifest artifacts/rr_validation/reference/manifest.json
@@ -39,7 +39,24 @@ PYTHONPATH=src python scripts/validate_beat_timing.py spotcheck --output-dir rep
 
 CI 另輸出一行 `PILOT_SUMMARY_JSON=`，其內容也保留在完整 JSON 的 `compact_summary`。每個取樣率、方法分開加總成功評估窗的 reference／detected／matched 搏數及 micro sensitivity／PPV，同時呈現總窗數、失敗窗數與完整候選窗數。定位誤差是各窗中位數的中位數與各窗 p95 的中位數，**後者不是 pooled p95**；RR 是各窗共同原始相鄰 RR 的 MAE 中位數，RMSSD 是各窗共同三搏差異的 signed／absolute 中位數，均附可用窗數。每個方法分別與標註配對，其可評估子集可能不同，因此不能將兩種方法彙總值的差直接視為相同搏動集合的配對效果。
 
-截至本機執行，本機未找到既有獨立 `.atr`／`.qrs`／`.qrsc`，PhysioNet DNS 無法解析，官方 WFDB GitHub sample-data 的二進位亦無法經文字 fetch 取得。因此本機尚未完成公開標註 pilot；上述下載＋benchmark 已準備讓可連網的普通 CI 執行，執行後才能登錄實測數字。若 CI 亦無法連線，最小資源需求就是從官方下載這 18 個檔案（六筆各三檔）及其來源版本，不需要新的 ICU 資料或 API 金鑰。更完整的驗證仍需未用於方法開發的資料、節律／NN 資格與 ICU 雙人盲標。
+本機缺少獨立標註且無法解析 PhysioNet DNS，已改由普通 GitHub CI 完成固定官方下載與評估，未傳送任何 ICU 資料。2026-11-01 正式結果如下；更完整的驗證仍需未用於方法開發的資料、節律／NN 資格與 ICU 雙人盲標。
+
+## 正式公開標註 pilot 結果
+
+來源 commit `83ea74c70ae1d9b31f723753e589a3d64d1b2a02`，[CI 執行紀錄](https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41297440771)。六筆紀錄共 36 個五分鐘窗，各跑 360 Hz 與 125 Hz，共 72 組評估，全部完成；每個取樣率均有 13,214 個參考搏動，不能將重複取樣率當成不同病例。完整逐窗報告在該次 CI artifact，永久保留的[機器可讀彙總](results/beat_timing_pilot_summary.json)另記來源 commit、run 與 artifact 雜湊。本節為執行後追加，事前文件指紋以來源 commit 中的檔案為準。
+
+| 取樣率／方法 | 匹配／偵測搏數 | sensitivity | PPV | 定位誤差：各窗 p95 中位數 (ms) | RR MAE：各窗中位數 (ms) | RMSSD 絕對差：各窗中位數 (ms) |
+|---|---:|---:|---:|---:|---:|---:|
+| 125 Hz XQRS | 13,197／13,684 | 99.87% | 96.44% | 52.16 | 17.74 | 9.96 |
+| 125 Hz 候選 | 11,517／11,543 | 87.16% | 99.77% | 6.89 | 2.99 | 0.77 |
+| 360 Hz XQRS | 13,138／13,533 | 99.42% | 97.08% | 2.78 | 1.44 | 1.20 |
+| 360 Hz 候選 | 11,586／11,634 | 87.68% | 99.59% | 5.56 | 1.57 | 0.41 |
+
+每個方法各自的匹配子集不同；誤差統計可用窗為 XQRS 36／36、候選 35／36。表中「各窗 p95 的中位數」不是全部搏動誤差的第 95 百分位。RR／RMSSD 數字也不是兩方法在相同保留搏動上的配對效果，更不是整段五分鐘 NN-HRV 精度。
+
+125 Hz 候選只有 **9／36** 窗保留全部非空 XQRS 種子，360 Hz 為 **11／36**。這個數量不保證參考搏動全被正確偵測，不代表訊號或正常 NN 合格率。候選在 125 Hz 的保留匹配子集誤差較小，同時 sensitivity 降低；原生 360 Hz 下 baseline 定位誤差與 RR MAE 反而較小，沒有一致優勢。
+
+**決策：不將此候選接入 M2。** 不依本輪結果調參後再把相同六筆稱為獨立驗證。先補充不同形態／節律的棄權分析、相同搏動子集對照及未參與方法開發的訊號驗證，再判斷是否值得建立 v2 快取。這個結果不證明 ICU 泛化、NN-HRV 適用性或預警效益。
 
 固定六例診斷已執行，結果在忽略版控的 `reports/local/beat_timing_v2_final/training_diagnostic_summary.json`，輸入仍是原來的 `selection.private.json`。三個 v1 accepted 樣本的候選保留搏數分別為 550/550、516/516、436/439；第三例的 3 搏因峰頂平台棄權，完整五分鐘候選 RMSSD 留空。樣本 1 的全 RR RMSSD 從 62.22 ms 變為 5.92 ms，樣本 2 為 7.98 ms 與 6.24 ms；這只是定位演算法輸出改變，沒有人工參考，因此不能稱誤差下降。樣本 3 在剩餘 428 個原始相鄰三搏的候選 RMSSD 為 19.33 ms，不能拿它與原本全部 437 個三搏直接做公平比較；JSON 另保留完全相同 seed 集合的 baseline 對照。
 

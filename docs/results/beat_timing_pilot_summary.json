@@ -1,0 +1,128 @@
+{
+  "schema_version": "beat_timing_compact_summary_v1",
+  "algorithm_version": "consistent_extremum_candidate_v0.1.0",
+  "metric_version": "beat_timing_metrics_v0.1.1",
+  "scope": "External expert-reviewed annotation engineering pilot; method development only, not ICU validation or sinus NN qualification",
+  "aggregation": "Detection totals pool evaluated windows at each sampling rate; failed windows are counted separately. Timing and RR summaries are medians of window statistics, never pooled beat-level percentiles. Each method uses its own reference-matched adjacent pairs/triplets; subsets can differ.",
+  "by_sampling_rate": {
+    "125.0": {
+      "total_windows": 36,
+      "evaluated_windows": 36,
+      "failed_windows": 0,
+      "reference_beats_in_all_planned_windows": 13214,
+      "full_candidate_windows": 9,
+      "methods": {
+        "baseline_xqrs": {
+          "evaluated_windows": 36,
+          "detection_totals": {
+            "reference_count": 13214,
+            "detected_count": 13684,
+            "matched_count": 13197
+          },
+          "micro_sensitivity": 0.998713485696988,
+          "micro_ppv": 0.9644109909383222,
+          "timing": {
+            "usable_windows": 36,
+            "median_of_window_absolute_median_ms": 3.0277777777545367,
+            "median_of_window_absolute_p95_ms_NOT_pooled_p95": 52.16111111114259
+          },
+          "shared_original_adjacent_rr": {
+            "usable_windows": 36,
+            "median_of_window_mae_ms": 17.737112089322245
+          },
+          "shared_original_adjacent_triplet_rmssd": {
+            "usable_windows": 36,
+            "median_of_window_signed_difference_ms": 9.956613576296405,
+            "median_of_window_absolute_difference_ms": 9.956613576296405
+          }
+        },
+        "consistent_fiducial": {
+          "evaluated_windows": 36,
+          "detection_totals": {
+            "reference_count": 13214,
+            "detected_count": 11543,
+            "matched_count": 11517
+          },
+          "micro_sensitivity": 0.87157560163463,
+          "micro_ppv": 0.9977475526292992,
+          "timing": {
+            "usable_windows": 35,
+            "median_of_window_absolute_median_ms": 2.8888888888687347,
+            "median_of_window_absolute_p95_ms_NOT_pooled_p95": 6.8888888889105715
+          },
+          "shared_original_adjacent_rr": {
+            "usable_windows": 35,
+            "median_of_window_mae_ms": 2.989436619719842
+          },
+          "shared_original_adjacent_triplet_rmssd": {
+            "usable_windows": 35,
+            "median_of_window_signed_difference_ms": 0.7708754430824882,
+            "median_of_window_absolute_difference_ms": 0.7708754430824882
+          }
+        }
+      }
+    },
+    "360.0": {
+      "total_windows": 36,
+      "evaluated_windows": 36,
+      "failed_windows": 0,
+      "reference_beats_in_all_planned_windows": 13214,
+      "full_candidate_windows": 11,
+      "methods": {
+        "baseline_xqrs": {
+          "evaluated_windows": 36,
+          "detection_totals": {
+            "reference_count": 13214,
+            "detected_count": 13533,
+            "matched_count": 13138
+          },
+          "micro_sensitivity": 0.9942485242924172,
+          "micro_ppv": 0.9708120889677085,
+          "timing": {
+            "usable_windows": 36,
+            "median_of_window_absolute_median_ms": 5.6843418860808015e-11,
+            "median_of_window_absolute_p95_ms_NOT_pooled_p95": 2.7777777778297263
+          },
+          "shared_original_adjacent_rr": {
+            "usable_windows": 36,
+            "median_of_window_mae_ms": 1.4351851852049906
+          },
+          "shared_original_adjacent_triplet_rmssd": {
+            "usable_windows": 36,
+            "median_of_window_signed_difference_ms": 0.07099791246542608,
+            "median_of_window_absolute_difference_ms": 1.1951535812506506
+          }
+        },
+        "consistent_fiducial": {
+          "evaluated_windows": 36,
+          "detection_totals": {
+            "reference_count": 13214,
+            "detected_count": 11634,
+            "matched_count": 11586
+          },
+          "micro_sensitivity": 0.8767973361586197,
+          "micro_ppv": 0.9958741619391439,
+          "timing": {
+            "usable_windows": 35,
+            "median_of_window_absolute_median_ms": 2.7777777777799884,
+            "median_of_window_absolute_p95_ms_NOT_pooled_p95": 5.555555555585201
+          },
+          "shared_original_adjacent_rr": {
+            "usable_windows": 35,
+            "median_of_window_mae_ms": 1.5689300411569078
+          },
+          "shared_original_adjacent_triplet_rmssd": {
+            "usable_windows": 35,
+            "median_of_window_signed_difference_ms": 0.3034028747869115,
+            "median_of_window_absolute_difference_ms": 0.4080398880204541
+          }
+        }
+      }
+    }
+  },
+  "source_commit": "83ea74c70ae1d9b31f723753e589a3d64d1b2a02",
+  "workflow_run_url": "https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41297440771",
+  "artifact_id": 13079876714,
+  "artifact_zip_sha256": "2a27d00734dce8be5dd15a8a9177a339f2164fb8c700fafac6b59e7185231ce8",
+  "retrieved_from": "PILOT_SUMMARY_JSON in completed job 124821144630; full per-window report retained in the workflow artifact"
+}
