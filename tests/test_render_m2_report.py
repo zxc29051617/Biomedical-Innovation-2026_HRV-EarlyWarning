@@ -34,10 +34,17 @@ class RenderReportTests(unittest.TestCase):
         self.signal = {
             "complete": True, "screened_epochs": 30, "accepted_epochs": 24,
             "hourly_sampled_epochs_accepted": 24, "plan": plan, **self.fingerprint,
+            "rejection_reason_counts": {"flat_run": 4, "low_block_amplitude": 4, "ecg_decode_unavailable": 2},
+            "decode_error_counts": {"lead_ii_absent": 8, "wfdb_decode_error": 2},
             "events": {"qualifying_events": 5, "before_first_landmark": 2,
                        "any_accepted_history_epoch": 3, "at_least_1h_accepted_epochs": 2,
                        "at_least_3h_accepted_epochs": 1, "full_6h_accepted_epochs": 0,
                        "any_current_hourly_epoch_accepted": 2},
+            "event_coverage_by_split": {
+                "train": {"any_current_hourly_epoch_accepted": 1},
+                "validation": {"any_current_hourly_epoch_accepted": 1},
+                "test": {},
+            },
             "riskset_coverage_by_split": {split: {
                 "all_positive": 2, "all_negative": 8, "all_censored": 2,
                 "current_epoch_accepted_positive": 1, "current_epoch_accepted_negative": 3,
@@ -148,6 +155,12 @@ class RenderReportTests(unittest.TestCase):
         self.assertIn("6／6 一致", content)
         self.assertIn("GQRS 不是標註真值", content)
         self.assertIn("不能外推發生比例", content)
+        self.assertIn("工程拒絕片段總數為 6", content)
+        self.assertIn("| `flat_run` | 4 |", content)
+        self.assertIn("| `lead_ii_absent` | 8 |", content)
+        self.assertIn("拒絕原因非互斥", content)
+        self.assertIn("不能歸為臨床品質差", content)
+        self.assertIn("仍可能通過工程篩選", content)
 
     def refresh_signal_hash(self):
         self.save("signal_summary.json", self.signal)
@@ -175,6 +188,94 @@ class RenderReportTests(unittest.TestCase):
         signal, development, comparison = renderer.load_validated(self.work)
         self.assertEqual(signal["events"]["before_first_landmark"], 0)
         self.assertIn("0 / 5（0.00%）", renderer.markdown_report(signal, development, comparison))
+
+    def test_empty_reason_counters_are_valid_only_without_rejected_epochs(self):
+        self.signal["accepted_epochs"] = self.signal["screened_epochs"]
+        with closing(sqlite3.connect(self.work / "epochs.sqlite")) as connection, connection:
+            connection.execute("UPDATE epochs SET accepted=1")
+        self.signal["rejection_reason_counts"] = {}
+        self.signal["decode_error_counts"] = {}
+        self.refresh_signal_hash()
+        signal, development, comparison = renderer.load_validated(self.work)
+        report = renderer.markdown_report(signal, development, comparison)
+        self.assertIn("無已記錄拒絕原因 | 0", report)
+        self.assertIn("無已記錄解碼錯誤 | 0", report)
+
+    def test_empty_decode_counter_is_valid_with_quality_rejections(self):
+        self.signal["rejection_reason_counts"] = {"flat_run": 4, "low_block_amplitude": 4}
+        self.signal["decode_error_counts"] = {}
+        self.refresh_signal_hash()
+        signal, development, comparison = renderer.load_validated(self.work)
+        report = renderer.markdown_report(signal, development, comparison)
+        self.assertIn("工程拒絕片段總數為 6", report)
+        self.assertIn("無已記錄解碼錯誤 | 0", report)
+
+    def test_rejected_epochs_require_sufficient_aggregate_reasons(self):
+        for reasons in ({}, {"flat_run": 5}):
+            self.signal["rejection_reason_counts"] = reasons
+            self.refresh_signal_hash()
+            with self.subTest(reasons=reasons), self.assertRaisesRegex(ValueError, "rejection_reason_counts_incomplete"):
+                self.render()
+            self.assertFalse(self.output.exists())
+
+    def test_invalid_reason_counts_and_unreviewed_codes_refused(self):
+        original = copy.deepcopy(self.signal)
+        for field, code, maximum in (("rejection_reason_counts", "flat_run", 6),
+                                     ("decode_error_counts", "lead_ii_absent", 30)):
+            for value in (-1, True, 1.5, "2", float("nan"), maximum + 1):
+                self.signal = copy.deepcopy(original)
+                self.signal[field] = {code: value}
+                self.refresh_signal_hash()
+                with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                    self.render()
+                self.assertFalse(self.output.exists())
+            for invalid in ([], None, {self.sentinel: 1}):
+                self.signal = copy.deepcopy(original)
+                self.signal[field] = invalid
+                self.refresh_signal_hash()
+                error = io.StringIO()
+                with self.subTest(field=field, value=invalid), redirect_stderr(error):
+                    result = renderer.main(["--work-dir", str(self.work)])
+                self.assertEqual(result, 2)
+                self.assertNotIn(self.sentinel, error.getvalue())
+                self.assertFalse(self.output.exists())
+
+    def test_event_coverage_is_cross_checked_for_each_development_split(self):
+        original = copy.deepcopy(self.signal)
+        for split in ("train", "validation"):
+            for value in (0, 2):
+                self.signal = copy.deepcopy(original)
+                self.signal["event_coverage_by_split"][split]["any_current_hourly_epoch_accepted"] = value
+                self.signal["events"]["any_current_hourly_epoch_accepted"] = value + 1
+                self.refresh_signal_hash()
+                with self.subTest(split=split, value=value), self.assertRaisesRegex(ValueError, "model_signal_event_count_mismatch"):
+                    self.render()
+                self.assertFalse(self.output.exists())
+            self.signal = copy.deepcopy(original)
+            del self.signal["event_coverage_by_split"][split]["any_current_hourly_epoch_accepted"]
+            self.signal["events"]["any_current_hourly_epoch_accepted"] = 1
+            self.refresh_signal_hash()
+            # An omitted Counter key means zero, which still cannot agree with
+            # this fixture's one scored event. It must not silently pass.
+            with self.subTest(split=split, omitted=True), self.assertRaisesRegex(ValueError, "model_signal_event_count_mismatch"):
+                self.render()
+
+    def test_split_current_event_counts_must_sum_to_all_event_coverage(self):
+        self.signal["event_coverage_by_split"]["test"]["any_current_hourly_epoch_accepted"] = 1
+        self.refresh_signal_hash()
+        with self.assertRaisesRegex(ValueError, "split_current_event_count_mismatch"):
+            self.render()
+        self.assertFalse(self.output.exists())
+
+    def test_sparse_split_event_counters_normalize_only_legal_zeros(self):
+        self.assertEqual(renderer.current_event_counts_by_split({"train": {}}),
+                         {"train": 0, "validation": 0, "test": 0})
+        for invalid in (-1, True, 1.5, "1", None):
+            with self.subTest(value=invalid), self.assertRaises(ValueError):
+                renderer.current_event_counts_by_split({"validation": {"any_current_hourly_epoch_accepted": invalid}})
+        for invalid in (None, [], {"train": None}):
+            with self.subTest(value=invalid), self.assertRaises(ValueError):
+                renderer.current_event_counts_by_split(invalid)
 
     def test_unknown_comparison_version_and_changed_feature_order_refused(self):
         self.comparison["comparison_version"] = "unreviewed_version"

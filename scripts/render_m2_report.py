@@ -31,6 +31,25 @@ PLOT_LABELS = ("Vitals", "+ Current RR", "+ RR history", "+ RR history + slopes"
 EVENT_KEYS = ("any_accepted_history_epoch", "at_least_1h_accepted_epochs",
               "at_least_3h_accepted_epochs", "full_6h_accepted_epochs",
               "any_current_hourly_epoch_accepted")
+REJECTION_CODES = frozenset({
+    "ecg_decode_unavailable", "wrong_epoch_length", "sampling_frequency_below_project_minimum",
+    "empty_signal", "nonfinite_samples", "flat_run", "low_block_amplitude", "excessive_amplitude_range",
+    "suspected_clipping", "detector_error", "low_beat_agreement", "low_block_beat_agreement",
+    "too_few_beats", "incomplete_beat_span", "too_many_screened_rr_intervals",
+    "insufficient_valid_rr_duration", "insufficient_adjacent_rr_intervals",
+})
+DECODE_CODES = frozenset({
+    "leaf_header_missing", "leaf_header_unreadable", "wfdb_header_error", "nested_multisegment_unsupported",
+    "invalid_leaf_sampling_metadata", "lead_ii_absent", "lead_ii_ambiguous", "lead_ii_header_inconsistent",
+    "explicit_calibration_required", "invalid_adc_gain", "unsupported_voltage_unit", "calibration_header_inconsistent",
+    "multiple_samples_per_frame_unsupported", "nonzero_skew_unsupported", "lead_ii_has_no_signal_file",
+    "invalid_leaf_header", "leaf_subject_identity_mismatch", "leaf_path_unsafe_or_unreadable",
+    "segment_sample_count_mismatch", "segment_sampling_rate_mismatch", "no_records", "mixed_subjects",
+    "record_subject_identity_mismatch", "no_decodable_lead_ii", "incompatible_sampling_rates",
+    "epoch_contains_no_samples", "incompatible_sample_grids", "signal_file_missing", "signal_file_unreadable",
+    "wfdb_decode_error", "decoded_shape_or_rate_mismatch", "decoded_channel_or_unit_mismatch",
+    "overlapping_signal_conflict",
+})
 
 
 def require(condition, reason):
@@ -49,6 +68,27 @@ def count(value, name):
     number(value, name)
     require(isinstance(value, int), "invalid_count_" + name)
     return value
+
+
+def validate_reason_counts(value, name, allowed_codes, maximum):
+    require(isinstance(value, dict), "invalid_reason_counts_" + name)
+    for code, total in value.items():
+        # Only fixed, reviewed diagnostic codes may enter a publishable table;
+        # arbitrary strings could contain a patient path or exception details.
+        require(code in allowed_codes, "unsupported_reason_code_" + name)
+        require(count(total, name) <= maximum, "reason_count_exceeds_epochs_" + name)
+
+
+def current_event_counts_by_split(value):
+    require(isinstance(value, dict), "invalid_event_coverage_by_split")
+    counts = {}
+    for split in ("train", "validation", "test"):
+        coverage = value.get(split, {})
+        require(isinstance(coverage, dict), "invalid_split_event_coverage")
+        # Counter/defaultdict serializations can omit a never-observed key or
+        # an entire split with no eligible events. Neither means missing work.
+        counts[split] = count(coverage.get("any_current_hourly_epoch_accepted", 0), "current_event_coverage")
+    return counts
 
 
 def same_number(actual, expected, name):
@@ -162,6 +202,15 @@ def load_validated(work_dir):
             "signal_metadata_mismatch")
     require(count(signal["accepted_epochs"], "accepted_epochs") == accepted, "signal_acceptance_count_mismatch")
     require(0 <= accepted <= cached, "invalid_signal_acceptance")
+    validate_reason_counts(signal["rejection_reason_counts"], "rejection", REJECTION_CODES, cached - accepted)
+    # Every rejected epoch has at least one reason in the frozen worker. The
+    # reasons overlap, so a lower bound is required, not equality with rejects.
+    require(sum(signal["rejection_reason_counts"].values()) >= cached - accepted,
+            "rejection_reason_counts_incomplete")
+    # Decoder error codes are de-duplicated within each epoch. An alternate
+    # record can still supply a complete accepted signal, so the upper bound
+    # here is all screened epochs, not only rejected epochs.
+    validate_reason_counts(signal["decode_error_counts"], "decode", DECODE_CODES, cached)
     require(count(signal["hourly_sampled_epochs_accepted"], "hourly_accepted") <= plan["plan"]["hourly_epochs"],
             "invalid_hourly_acceptance")
     events = signal["events"]
@@ -175,6 +224,9 @@ def load_validated(work_dir):
         require(count(events[key], key) <= total - early, "invalid_event_coverage")
     require(events["full_6h_accepted_epochs"] <= events["at_least_3h_accepted_epochs"] <=
             events["at_least_1h_accepted_epochs"] <= events["any_accepted_history_epoch"], "inconsistent_event_coverage")
+    current_events = current_event_counts_by_split(signal["event_coverage_by_split"])
+    require(sum(current_events.values()) == events["any_current_hourly_epoch_accepted"],
+            "split_current_event_count_mismatch")
     current_total = 0
     for split in ("train", "validation", "test"):
         coverage = signal["riskset_coverage_by_split"][split]
@@ -217,6 +269,8 @@ def load_validated(work_dir):
     require(set(models) == set(ALL_MODELS), "five_model_variants_required")
     require(models["vitals_all"]["data"] == full, "full_cohort_baseline_population_mismatch")
     for split in ("train", "validation"):
+        require(current_events[split] == models[BASELINE]["data"][split]["distinct_events_with_positive_window"],
+                "model_signal_event_count_mismatch")
         for label in ("positive", "negative", "censored"):
             coverage = signal["riskset_coverage_by_split"][split]
             require(full[split]["label_counts"][label] == coverage["all_" + label]
@@ -289,6 +343,25 @@ def markdown_report(signal, development, comparison):
         data = signal["riskset_coverage_by_split"][split]
         for outcome, title in (("positive", "陽性"), ("negative", "陰性"), ("censored", "截尾")):
             lines.append(f"| {label}／{title} | {ratio(data['current_epoch_accepted_' + outcome], data['all_' + outcome])} |")
+    lines += ["", "## 工程拒絕原因與解碼問題", "",
+              f"工程拒絕片段總數為 {signal['screened_epochs'] - signal['accepted_epochs']:,}。"
+              "下列拒絕原因非互斥，同一片段可有多項原因，不能將各列相加當作片段總數；"
+              "`ecg_decode_unavailable` 與 `detector_error` 也可能反映技術問題，不能全稱為臨床訊號品質不良。", "",
+              "| 工程拒絕原因代碼 | 出現該原因的片段數 |", "|---|---:|"]
+    reasons = signal["rejection_reason_counts"]
+    for code, total in sorted(reasons.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"| `{code}` | {total:,} |")
+    if not reasons:
+        lines.append("| 無已記錄拒絕原因 | 0 |")
+    lines += ["", "解碼錯誤另表列出，代表資料、格式、通道或讀取的技術問題，不能歸為臨床品質差。"
+              "每個代碼在單一片段內只計一次；不同代碼仍可重疊，不能相加當作失敗片段總數。"
+              "其他重疊紀錄可能補足訊號，因此有解碼錯誤代碼的片段仍可能通過工程篩選。", "",
+              "| 解碼錯誤代碼 | 出現該錯誤的片段數 |", "|---|---:|"]
+    errors = signal["decode_error_counts"]
+    for code, total in sorted(errors.items(), key=lambda item: (-item[1], item[0])):
+        lines.append(f"| `{code}` | {total:,} |")
+    if not errors:
+        lines.append("| 無已記錄解碼錯誤 | 0 |")
     lines += ["", "## 相同 RR 通過時窗的四組配對模型", "",
               f"驗證患者 {comparison['samples']['patients']:,} 位、非截尾時窗 {comparison['samples']['binary_windows']:,} 個、"
               f"陽性事件 {comparison['samples']['positive_event_stays']:,} 個；陽性時窗比例 {models[BASELINE]['validation']['prevalence']:.5f}。", "",

@@ -118,6 +118,7 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [近期里程碑](docs/roadmap.md)
 - [資料盤點證據](docs/data_inventory.md)
 - [M2 風險集合、訊號工作與開發基準](docs/m2_results.md)
+- [v2 搏動定位與 RR 量測驗證準備](docs/rr_validation_v2.md)
 - [前作與來源](docs/references.md)
 - [機器可讀規格](configs/protocol.toml)
 - `src/hrv_early_warning/inventory.py`：可重跑的資料盤點。
