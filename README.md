@@ -77,6 +77,8 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 訊號與模型需額外依賴，可在獨立環境執行 `python -m pip install -e '.[signal,model]'`。本次驗證環境為 Python 3.13.17、numpy 2.2.6、scipy 1.15.3、pandas 2.2.3、wfdb 4.3.0、scikit-learn 1.6.1。全量訊號處理可能需要數小時，逐批結果寫入 SQLite；同一 work directory 請只啟動一個訊號工作。
 
+繪製彙總結果另需 `report` 依賴，可安裝 `python -m pip install -e '.[signal,model,report]'`；本次使用 matplotlib 3.10.3。
+
 ```bash
 PYTHONPATH=src python -m hrv_early_warning vitals \
   --paths configs/paths.local.toml --output reports/local/vitals.json
@@ -91,6 +93,8 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 也可指定已安裝依賴的 Python 後執行 `HRV_PYTHON=/path/to/python sh scripts/run_m2.sh`，依序完成資料可行性、生命徵象、訊號、開發模型與配對比較。
 
 `compare` 需全量 ECG 與四組配對模型都已完成；固定已訓練模型，在相同開發驗證患者與時窗上重抽患者 200 次，計算加入 RR 特徵的指標差及 95% 區間，不重訓或讀取保留測試。彙總預設寫入 `artifacts/m2/paired_comparison.json`，可用 `--output` 改位置。它預設讀取 `configs/paths.local.toml` 以保護來源目錄，可用 `--paths` 指定其他設定。區間未包含訓練不確定性，也未校正多重比較。
+
+比較完成後，可執行 `PYTHONPATH=src python scripts/render_m2_report.py --work-dir artifacts/m2`，產生彙總表與兩張 SVG 至 `reports/local/m2_publishable/`，供團隊審閱。工具核對完整片段數、模型來源、bootstrap 規格及各項分母；不完整或來源不一致會拒絕產生新報告，不讀患者特徵或反序列化模型，也不會自動發布。
 
 使用 `PYTHONPATH=src python -m hrv_early_warning status` 查詢進度。若訊號工作已另行啟動，`PYTHONPATH=src python scripts/finalize_m2.py` 可等待完整快取後接續建模；它不啟動另一份 ECG 工作，預設最多等候 24 小時。工作失敗會留下明確狀態，不能將等待程式仍在執行當成訊號工作成功。
 
