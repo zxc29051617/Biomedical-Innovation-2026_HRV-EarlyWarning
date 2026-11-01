@@ -1,6 +1,6 @@
 # 五分鐘 ECG 品質與候選 RR 特徵：證據及工程規則
 
-核對日期：2026-11-01；程式版本 `rr_quality_v1`。實作見 [signal_quality.py](../src/hrv_early_warning/signal_quality.py)，測試見 [test_signal_quality.py](../tests/test_signal_quality.py)。本文件不代表已完成真實資料的心律判讀或訊號驗證，也不是臨床可用性認證。
+核對日期：2026-11-01；程式版本 `rr_quality_v1`。實作見 [signal_quality.py](../src/hrv_early_warning/signal_quality.py)，測試見 [test_signal_quality.py](../tests/test_signal_quality.py)。本文件包含真實資料的一致性抽查，但不代表已完成心律標註或偵測準確率驗證，也不是臨床可用性認證。
 
 這一版輸出「通過工程篩選的 RR 間期特徵」。**通過不代表竇性心律、排除 AF／pacing、確認所有心搏正常，亦不等於可解釋為自律神經 HRV。** 所有結果均包含 `rhythm_status=not_assessed`、`nn_confirmed=false` 及未判定 AF／pacing 的欄位。因此採 `mean_rr_ms`、`sdrr_ms`、`rmssd_rr_ms` 命名，不將 `sdrr_ms` 改稱已確認的 SDNN。
 
@@ -55,4 +55,26 @@
 
 相同合成 300 s／125 Hz 資料的單次本機計時：XQRS 約 `0.090 s`、GQRS 約 `0.176 s`；完整模組 warm call 約 `0.265 s`，首次含 lazy import 約 `0.74 s`。簡單 bandpass＋`scipy.signal.find_peaks` 約 `0.005 s`，但其資料適用性未驗證，故未採為替代。這些為單例速度量測，未包含來源檔讀取、平行排程及真實雜訊變異，不是全資料執行時間保證。
 
-下一步應在既定開發資料、小批次及隱私保護的流程中報告接受率、每項拒絕原因、偵測錯誤、有效 RR 覆蓋及心律判讀缺口；用未看結局的抽查或公開標註 ECG 檢查偵測誤差。保留測試患者不得用於選門檻。未完成這些核對前，作品只能聲稱建立了可稽核工程品質篩選與候選 RR 特徵程式，不能聲稱已驗證的臨床 HRV 品質或病理診斷。
+## 真實訓練片段抽查：重現成功但定位精度仍有缺口
+
+2026-11-01，使用 [spotcheck_signals.py](../scripts/spotcheck_signals.py)，只從既有快取的訓練患者依工程決策分層，固定 seed=20261101，以雜湊排序選取三個 accepted 及三個已解碼的 rejected 片段，每個片段來自不同次 ICU。選取不依臨床終點，首次選取清單保存後不隨新增快取改變。這是小型、非代表性的一致性抽查，三個 accepted 是抽樣設計，不是估計的接受率；也不能用六例外推問題盛行率或偵測敏感度／特異度。
+
+六例全部為 125 Hz、300 秒、37,500 點，輸出單位 mV；重新讀取來源解碼後，**6/6 的決策、拒絕理由、特徵及 metrics 與快取完全相同**。三個拒絕片段分別包含缺值、疑似截頂，以及有效 RR 個數／時間不足。原始波形檢視圖、患者對照清單及詳細報告只存於忽略的 `reports/local/spotcheck/`，不隨原始碼發布。
+
+接受片段 01 與 03 的檢視圖顯示，XQRS 的搏動定位點（fiducial）在不同搏動間可落於 QRS 前方低點或較高峰，仍符合與 GQRS 的 100 ms 配對容許值。以下對同一組一對一配對搏動計算偏移；RMSSD 診斷僅使用兩個偵測器中皆維持原始相鄰的三搏組，不跨越缺失配對，也沒有套用模型的 RR 篩選或產生替代特徵。
+
+| 私有抽查序號（均 accepted） | 配對搏動數 | XQRS−GQRS 時點偏移第 5／50／95 百分位（ms） | XQRS 診斷 RMSSD（ms） | GQRS 診斷 RMSSD（ms） |
+|---|---:|---|---:|---:|
+| 01 | 550 | −16／32／40 | 62.22 | 5.75 |
+| 02 | 516 | 32／40／40 | 7.98 | 7.54 |
+| 03 | 439 | −16／32／40 | 49.61 | 18.19 |
+
+這三例的 XQRS 診斷 RMSSD 與快取 `rmssd_rr_ms` 一致。兩個偵測器的逐次 RR 差值之差，可由配對時點偏移的二階差分精確重建；固定偏移會抵消，逐搏變動的偏移則會進入變異度。**GQRS 並非標註真值，表中較低數值不能當作正確生理 HRV。** 此觀察顯示高配對率不保證足以計算 RR 變異的定位一致性，不能把 accepted 解讀為已證實可靠的生理 HRV。
+
+此二階差分恆等式只是代數一致性核對，不能將兩個 RMSSD 數值直接相減，解釋成已分離的生理量與誤差量。[WFDB 4.3.0 XQRS 原始碼](https://github.com/MIT-LCP/wfdb-python/blob/v4.3.0/wfdb/processing/qrs.py)在處理後訊號的局部峰值判定 QRS，沒有再自動對齊原始波形的 R 波頂點。125 Hz 每格為 8 ms，驗證時須特別區分找對搏動與定位足夠精確。
+
+本輪 `rr_quality_v1` 保留為凍結的工程基準，不依這六例改門檻或覆寫快取；即使模型後續有分數增益，也仍須排除偵測時點與品質差異的影響。後續 v2 須在訓練資料與有獨立搏動標註的資料上驗證一致定位點、相對標註的時間誤差及 RR／RMSSD 誤差，並另外處理心律與正常搏動適用性。[WFDB 官方 `correct_peaks` 文件](https://wfdb.readthedocs.io/en/latest/processing.html#wfdb.processing.correct_peaks)提供依搜尋範圍及方向調整到局部峰值的方法，可列為候選；它不是本專案已驗證的解法，亦不能取代心律標註。
+
+v2 若變更偵測位置、規則或依賴套件，須保存 v1、記錄新版本與驗證依據，使用新的快取目錄，並在相同患者切分下重新計算。全量覆蓋、拒絕原因與有效 RR 時間仍需完整報告；保留測試維持封存，不用於選定位方法或門檻。
+
+候選定位方法另須檢查正／反向及雙相波形、寬 QRS、雜訊、重複峰值、索引順序、位移上限和片段邊界。本地 WFDB 4.3.0 的 `correct_peaks` 邊界探測中，30 點陣列在 index 2 放單一脈衝，`search_radius=5`、`smooth_window_size=3`、`peak_dir='up'` 會回傳 −4；脈衝放在 index 29 則回傳 24。[相同版本的 peaks 原始碼](https://github.com/MIT-LCP/wfdb-python/blob/v4.3.0/wfdb/processing/peaks.py)亦須配合檢視。這是候選方法的合成邊界問題，本輪 v1 未使用該函式。後續不得以預測時刻之後的訊號補邊界，亦不得把通過這些工程測試當成正常心律標註。
