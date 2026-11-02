@@ -1,0 +1,46 @@
+name: Public pre-angiography ECG waveform audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cath-waveforms.yml'
+      - 'scripts/audit_cath_waveforms.py'
+      - 'src/hrv_early_warning/cath_waveforms.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cath-public-waveform-audit
+  cancel-in-progress: false
+
+jobs:
+  public-waveforms:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -c configs/requirements-ci.txt -e '.[signal]'
+      - name: Verify decoder and archive controls on synthetic records
+        run: python -m unittest discover -s tests -p 'test_cath_waveform*.py' -v
+        env:
+          PYTHONPATH: src
+      - name: Decode fixed public training ECGs and report aggregates
+        run: python scripts/audit_cath_waveforms.py --output-dir artifacts/cath_feasibility/public_waveforms_v1
+        env:
+          PYTHONPATH: src
+      - name: Save aggregate reports only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: public-cath-waveform-summary
+          path: |
+            artifacts/cath_feasibility/public_waveforms_v1/summary.json
+            artifacts/cath_feasibility/public_waveforms_v1/raw_summary.json
+            artifacts/cath_feasibility/public_waveforms_v1/median_summary.json
+          retention-days: 7
+          if-no-files-found: error

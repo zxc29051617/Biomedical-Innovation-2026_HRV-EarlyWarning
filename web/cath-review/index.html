@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>十二導程 ECG 盲性複核</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="core.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">研究工具 · 獨立盲性判讀</p>
+    <h1>十二導程 ECG 複核</h1>
+    <p class="intro">檢視同一份 ECG，記錄一般 ST 上升幅度規則的適用性與判讀。工具不推測 OMI、不自動量測 ST，也不呈現造影結果或模型分數。</p>
+    <div class="actions">
+      <button id="open-file" type="button">匯入盲性 ECG JSON</button>
+      <input id="import-file" type="file" accept=".json,application/json" hidden>
+      <button id="load-demo" type="button" class="secondary">載入合成練習</button>
+    </div>
+    <p class="privacy">資料只在此頁記憶體內處理；沒有上傳或自動保存。切換病例會清空判讀，離開前請匯出。</p>
+    <p id="import-error" role="alert" hidden></p>
+  </header>
+
+  <section class="case-card" aria-labelledby="case-heading">
+    <div class="case-top"><h2 id="case-heading">目前病例</h2><span id="source-kind" class="badge">尚未載入</span></div>
+    <p id="case-id">—</p>
+    <p id="case-meta">匯入盲性資料，或載入合成練習。</p>
+    <p id="representation-note"></p>
+    <details><summary>來源指紋</summary><p id="fingerprint" class="mono">—</p><p id="waveform-hash" class="mono">—</p></details>
+  </section>
+
+  <section class="trace-section" aria-labelledby="trace-heading">
+    <div class="section-heading"><h2 id="trace-heading">波形與游標</h2><p>mV ／秒；畫面比例不等於實體紙張毫米。</p></div>
+    <div class="controls">
+      <label>時間視窗<select id="window-seconds"><option value="2.5">2.5 秒</option><option value="5">5 秒</option><option value="10">10 秒</option></select></label>
+      <label>垂直範圍<select id="amplitude-range"><option value="1">±1 mV</option><option value="2" selected>±2 mV</option><option value="5">±5 mV</option></select></label>
+      <label class="position">起始時間 <output id="start-value">0.000 秒</output><input id="start-time" type="range" min="0" max="0" value="0" step="0.002"></label>
+      <button id="clear-cursor" type="button" class="secondary">清除游標</button>
+    </div>
+    <p id="grid-note">細格 0.04 秒／0.1 mV，粗格 0.2 秒／0.5 mV；每列另有 1 mV 校正標記。</p>
+    <p id="cursor-readout" class="readout" aria-live="polite">移動游標讀取原始取樣點；點一下設參考點，再移動可看時間與電壓差。鍵盤可用左右鍵移動、Enter 設參考。</p>
+    <p id="clipping-note" role="status" hidden></p>
+    <div id="lead-grid" aria-label="十二導程波形"></div>
+  </section>
+
+  <section class="review-card" aria-labelledby="review-heading">
+    <h2 id="review-heading">記錄判讀</h2>
+    <p>依團隊凍結的判讀手冊填寫。以下是研究標註，不能作為臨床診斷或處置指示。</p>
+    <form id="review-form">
+      <div class="form-grid">
+        <label>判讀者代碼<input id="reviewer-id" required maxlength="40" autocomplete="off" placeholder="例如 reviewer_01" pattern="[A-Za-z0-9_-]{1,40}"></label>
+        <label>一般 ST 上升幅度規則<select id="amplitude-status" required><option value="">尚未判讀</option><option value="applicable_positive">適用且可量測，達門檻</option><option value="applicable_negative">適用且可量測，未達門檻</option><option value="alternative_criteria">需另外規則判讀</option><option value="indeterminate">無法判定</option></select></label>
+        <label>變化是否新發<select id="newness"><option value="unknown">未知／無法確認</option><option value="new">已確認新發</option><option value="presumed_new">推定新發</option><option value="old">已知舊有變化</option></select></label>
+      </div>
+      <fieldset><legend>另外記錄的型態</legend><p>預設為未判定，未勾選不會被當作不存在。</p><div id="findings" class="form-grid"></div></fieldset>
+      <label>判讀備註<textarea id="notes" rows="3" maxlength="2000" placeholder="記錄導程、量測困難或需裁決處；請勿填入患者身分資訊。"></textarea></label>
+      <p id="annotation-error" role="alert" hidden></p>
+      <div class="actions"><button id="export-annotation" type="submit" disabled>匯出判讀 JSON</button><span id="export-status" role="status">尚未判讀</span></div>
+    </form>
+  </section>
+  <footer>盲性複核工具 v1 · 匯入病例必須已由資料管理者移除來源識別碼與結局標籤。不能由本工具證明來源檔案已完成去識別化或臨床驗證。</footer>
+</main>
+</body>
+</html>
