@@ -8,7 +8,7 @@
 
 只解碼明確的 `CSV/train.csv` 所指紀錄。整個來源 ZIP 雖也包含官方 test 的檔案，**不讀取 test 波形作品質或模型分析**。本輪保留全部訓練列，不按 OMI、來源 STEMI、時間或訊號看起來是否漂亮挑選；患者／事件選圖與建模切分尚未執行。
 
-CSV 至 header 優先使用精確路徑；若路徑不同，只容許唯一 basename 配對，零個或多個匹配即記失敗。報告兩種配對方式數量。原始與 median 分開計數，不能將 median 的短長度當成缺少十秒原始 ECG。
+CSV 至 header 優先使用精確路徑；若路徑不同，只容許唯一 basename 配對，零個或多個匹配即記失敗。CSV實際指向`.dat`，僅移除明確的`.dat`／`.hea`後綴取得record stem，不任意刪其他副檔名。報告兩種配對方式數量。**實測 median ZIP只有`.med`，沒有WFDB header，目前尚未支援其解碼**；介面支援已校正的median JSON，不代表官方`.med`已轉換成功。
 
 ## 解碼與校正
 
@@ -26,10 +26,10 @@ CSV 至 header 優先使用精確路徑；若路徑不同，只容許唯一 base
 
 ```sh
 PYTHONPATH=src python scripts/audit_cath_waveforms.py \
-  --output-dir artifacts/cath_feasibility/waveforms_new_run
+  --output-dir artifacts/cath_feasibility/waveforms_new_run --representation raw
 ```
 
-已有官方檔案時可用 `--csv-archive`、`--raw-archive`、`--median-archive` 指定；仍須通過相同完整校驗。也可 `--representation raw` 或 `median` 單獨稽核。輸出拒絕覆寫，失敗不會被當成功結果。CI 只上傳彙總 JSON，不上傳來源 ZIP、逐案 ECG 或本機 MIMIC 資料。
+已有官方檔案時可用 `--csv-archive`、`--raw-archive` 指定；仍須通過相同完整校驗。`--representation median`／`both`可重現格式盤點，但目前不會產生官方median解碼成功結果；尚缺`.med`的明確尺度與讀取規格。輸出拒絕覆寫，失敗不會被當成功結果。CI 只上傳彙總 JSON，不上傳來源 ZIP、逐案 ECG 或本機 MIMIC 資料。
 
 ## 離線複核工具
 
@@ -58,8 +58,31 @@ python scripts/export_cath_review_case.py \
   --output-dir artifacts/cath_feasibility/review_case_new
 ```
 
-可另外提供 `--age-years` 與 `--sex male|female|unknown`；未提供時保留未知。匯出器完整校驗官方 ZIP，產生 `case.json` 及 `source_mapping.local.json`，後者包含私密來源對照。**只交 `case.json` 給兩位獨立判讀者，來源對照留在資料管理端。** 目錄0700、檔案0600，禁止覆寫；輸出不讀取或推導疾病標籤。第一次到院、就醫事件及實際檢查時間維持未知。
+可另外提供 `--age-years` 與 `--sex male|female|unknown`；未提供時保留未知。匯出器完整校驗官方 ZIP，產生 `case.json` 及 `source_mapping.local.json`，後者包含私密來源對照。**只交 `case.json` 給兩位獨立判讀者，來源對照留在資料管理端。** 目錄0700、檔案0600，禁止覆寫；輸出不讀取或推導疾病標籤。第一次到院、就醫事件及實際檢查時間維持未知。官方`.med`目前不能匯出，實際病例僅支援raw；合成median瀏覽器測試不能替代此解碼。
 
 ## 驗證狀態
 
-合成測試檢查官方 WFDB 往返、導程重排、單位、缺失值、ZIP控制及盲包白名單；瀏覽器測試另檢查匯入／拒絕額外欄位、游標、判讀匯出、手機布局與無網路請求。缺依賴而跳過的測試不得稱已通過。實際公開波形稽核結果與 CI 狀態於工作完成後另存彙總並更新本節；目前不以程式完成代替資料成功。
+程式 `c38b8cfa3371c1f15577c57e91a73bcfd155a11b` 在[完整 CI](https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41432927580)實際通過497項Python測試，包括官方WFDB往返與盲包匯出；新版瀏覽器9組合成檢查與原HRV展示檢查通過。測試涵蓋導程重排、單位、缺失值、ZIP控制、盲包白名單、游標／匯出、手機布局及無網路請求。這些不代表已有醫師判讀或臨床量測驗證。
+
+### 實際公開波形結果
+
+[公開資料 CI](https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41432927603)已完成校驗三份固定來源；[完整彙總](results/cath_waveform_summary.json)保留每種representation的分母、格式與失敗碼。
+
+| 原始 raw 訓練 ECG | 結果 |
+|---|---:|
+| 嘗試讀取 | 17,960份 |
+| 成功解碼 | 17,955份／17,013位患者 |
+| 成功解碼的來源 OMI 陽性 | 1,151份／1,139位患者 |
+| 成功解碼且來源 OMI=1、STEMI=0 | 424份；尚非ST幅度陰性子群 |
+| 非有限／缺失取樣值 | 3份 |
+| WFDB解碼錯誤 | 2份 |
+| 成功解碼但至少一導程完全恆定 | 50份 |
+| 成功解碼中的完全重複波形 | 0組 |
+
+成功解碼者均為十二導程、500Hz、5000 samples（10秒），header明列mV、WFDB format16，沒有提供base date／time。全局電壓範圍約−32.766至+32.766mV；這些極值及平直導程仍須品質檢查，不能宣稱17,955份全可可靠判讀。缺少日期／時間也無法補出到院第一張。
+
+原始archive有19,955對`.dat`／`.hea`；訓練CSV指向`.dat`，17,955個成功配對皆經唯一basename解析。首輪只處理stem／`.hea`而全部配對失敗；補上已知`.dat`後綴後取得上述結果，沒有放寬臨床或訊號品質門檻。成功解碼的17,955個波形指紋各不相同，但不能排除近似重複，也不能解釋115位患者的標籤時序差異。
+
+Median archive實際為19,955個`.med`檔、0個`.hea`，訓練CSV也指向`.med`。報告中的median `record_reference_missing`表示目前WFDB reader不支援此格式，**不是已證明全部median波形壞掉**。[原文](https://pmc.ncbi.nlm.nih.gov/articles/PMC13347058/)只說由商用MedEx擷取median，[作者程式](https://github.com/catcatgirl/validation-code/tree/tag)未提供`.med` parser；目前未找到dtype、byte order、reshape及電壓尺度的完整規格，不猜二進位格式。匯出器對此回報明確的unsupported錯誤。主要候選輸入仍為原始十二導程；與採median的文獻模型比較時須揭露表示方式不同，不能稱已重現原模型。
+
+本機網路無法連上來源站，因此上述真實解碼在CI完成，來源ZIP與患者盲包沒有傳回本機或對外發布。本機已產生僅含工具與合成練習的`Cath-ECG-Review.zip`，SHA256為`f77f2809a1e7578459cc94c545755e54c670307b083297f48542adaa329de7f6`。正式病例盲包及臨床判讀尚未產生；具資料連線的環境可依上方CLI準備。

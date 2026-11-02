@@ -1,0 +1,154 @@
+{
+  "schema_version": "cath-waveform-audit-v1",
+  "status": "audit_complete_no_decodable_records_in_one_or_more_representations",
+  "dataset_doi": "10.6084/m9.figshare.29925314.v1",
+  "license": "CC0",
+  "scope": "Named public train.csv only; archive may contain official test records, whose waveforms are not decoded.",
+  "train_rows": 17960,
+  "sources": {
+    "csv": {
+      "url": "https://ndownloader.figshare.com/files/62951134",
+      "filename": "CSV.zip",
+      "bytes": 296769,
+      "md5": "1cb46279c0e68e6512bd39214fc56528",
+      "sha256": "675a57e90eea1175259301293812ec0a23c73f83ec7fb352a8309f05843d0005",
+      "acquisition": "official_fixed_url"
+    },
+    "raw": {
+      "url": "https://ndownloader.figshare.com/files/62951395",
+      "filename": "ECG_row_data.zip",
+      "bytes": 1277577332,
+      "md5": "acea6ca86a2d0b937ecfe7d1df6d30a2",
+      "sha256": "9a5a1bf1655b28d09de152bd4bf443c491cef4a1adff108b40938ee90e6693c4",
+      "acquisition": "official_fixed_url"
+    },
+    "median": {
+      "url": "https://ndownloader.figshare.com/files/62951137",
+      "filename": "ECG_median_data.zip",
+      "bytes": 140340429,
+      "md5": "4da1650cdbfb9817aa66df58c66564e1",
+      "sha256": "0e93483d352be641781caa95b5ba0bdcc6c3635433a9db31ecb7c39f4615524d",
+      "acquisition": "official_fixed_url"
+    }
+  },
+  "representations": [
+    {
+      "representation": "raw",
+      "attempted_train_rows": 17960,
+      "decoded_train_rows": 17955,
+      "decoded_distinct_patients": 17013,
+      "decoded_source_omi_one_rows": 1151,
+      "decoded_source_omi_one_distinct_patients": 1139,
+      "decoded_source_omi_one_source_stemi_zero_rows": 424,
+      "failure_codes": {
+        "nonfinite_samples": 3,
+        "wfdb_decode_error": 2
+      },
+      "csv_to_header_resolution": {
+        "unique_basename": 17955
+      },
+      "sample_count_distribution": {
+        "5000": 17955
+      },
+      "source_unit_patterns": {
+        "mV|mV|mV|mV|mV|mV|mV|mV|mV|mV|mV|mV": 17955
+      },
+      "wfdb_format_patterns": {
+        "16|16|16|16|16|16|16|16|16|16|16|16": 17955
+      },
+      "header_time_field_presence": {
+        "header_has_base_date_false": 17955,
+        "header_has_base_time_false": 17955
+      },
+      "reference_diagnostics": {
+        "archive_file_extensions": {
+          ".dat": 19955,
+          ".hea": 19955
+        },
+        "csv_reference_extensions": {
+          ".dat": 17960
+        },
+        "indexed_header_count": 19955,
+        "csv_references_with_backslash": 0,
+        "csv_references_with_outer_whitespace": 0
+      },
+      "raw_records_not_5000_samples": 0,
+      "records_with_any_exactly_constant_lead": 50,
+      "global_minimum_mv": -32.766,
+      "global_maximum_mv": 32.766,
+      "unique_decoded_waveform_hashes": 17955,
+      "repeated_waveform_hash_groups": 0,
+      "rows_beyond_first_per_waveform_hash": 0,
+      "waveform_hash_groups_with_multiple_patient_ids": 0,
+      "waveform_hash_groups_with_source_omi_zero_and_one": 0,
+      "same_patient_same_waveform_groups_with_source_omi_zero_and_one": 0
+    },
+    {
+      "representation": "median",
+      "attempted_train_rows": 17960,
+      "decoded_train_rows": 0,
+      "decoded_distinct_patients": 0,
+      "decoded_source_omi_one_rows": 0,
+      "decoded_source_omi_one_distinct_patients": 0,
+      "decoded_source_omi_one_source_stemi_zero_rows": 0,
+      "failure_codes": {
+        "record_reference_missing": 17960
+      },
+      "csv_to_header_resolution": {},
+      "sample_count_distribution": {},
+      "source_unit_patterns": {},
+      "wfdb_format_patterns": {},
+      "header_time_field_presence": {},
+      "reference_diagnostics": {
+        "archive_file_extensions": {
+          ".med": 19955
+        },
+        "csv_reference_extensions": {
+          ".med": 17960
+        },
+        "indexed_header_count": 0,
+        "csv_references_with_backslash": 0,
+        "csv_references_with_outer_whitespace": 0
+      },
+      "raw_records_not_5000_samples": 0,
+      "records_with_any_exactly_constant_lead": 0,
+      "global_minimum_mv": null,
+      "global_maximum_mv": null,
+      "unique_decoded_waveform_hashes": 0,
+      "repeated_waveform_hash_groups": 0,
+      "rows_beyond_first_per_waveform_hash": 0,
+      "waveform_hash_groups_with_multiple_patient_ids": 0,
+      "waveform_hash_groups_with_source_omi_zero_and_one": 0,
+      "same_patient_same_waveform_groups_with_source_omi_zero_and_one": 0
+    }
+  ],
+  "environment": {
+    "numpy": "2.2.6",
+    "wfdb": "4.3.0",
+    "python": "3.13.17"
+  },
+  "source_fingerprints": {
+    "script_sha256": "e78acd143c26b2e8d959dd5d5f86408214cbf15ea5ee236cc8f110f522a17a14",
+    "module_sha256": "f96e007193446bb825dc42f2fc017137de9a529faa50dba4442bfdbcd7242285"
+  },
+  "elapsed_decode_seconds": 114.927,
+  "clinical_quality_validated": false,
+  "st_amplitude_measured": false,
+  "models_fitted": false,
+  "first_arrival_ecg_identified": false,
+  "limitations": [
+    "Decoding and finite voltage are engineering properties, not clinical signal quality or OMI diagnosis.",
+    "Source STEMI=0 is not a same-ECG ST-amplitude-negative subgroup.",
+    "A matching waveform hash tests exact decoded-signal identity only, not near-duplicates or episode identity.",
+    "Different source labels for a patient remain unresolved; no any-positive relabeling is performed.",
+    "All ECG-level counts retain repeated patients; this audit does not choose an index ECG or a model split."
+  ],
+  "execution": {
+    "date": "2026-11-02",
+    "source_code_commit": "c38b8cfa3371c1f15577c57e91a73bcfd155a11b",
+    "run_id": 41432927603,
+    "job_id": 125235703988,
+    "run_url": "https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41432927603",
+    "scope": "Official public archives; only named train raw records decoded. Median archive discovered to contain .med without .hea and remains unsupported. No local MIMIC or model fitting."
+  }
+}

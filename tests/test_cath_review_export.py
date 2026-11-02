@@ -44,6 +44,20 @@ class RecordingStream(io.BytesIO):
 
 
 class VerificationAndOutputTests(unittest.TestCase):
+    def test_official_med_container_is_reported_unsupported_without_inventing_scale(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "median.zip"
+            with zipfile.ZipFile(archive, "w") as zf:
+                zf.writestr("median/synthetic.med", b"undocumented synthetic bytes")
+            destination = root / "out"
+            with patch.object(exporter.metadata_audit, "OUTPUT_ROOT", root), \
+                    patch.dict(exporter.SOURCES, {"median": source_for(archive.read_bytes())}):
+                with self.assertRaisesRegex(exporter.metadata_audit.AuditError,
+                                            "^official_median_med_format_not_supported$"):
+                    exporter.export_case(archive, "synthetic.med", "median", destination)
+            self.assertFalse(destination.exists())
+
     def test_full_archive_verification_streams_and_checks_size_and_digest(self):
         payload = b"x" * (2 * 1024 * 1024 + 7)
         stream = RecordingStream(payload)

@@ -94,7 +94,11 @@ def export_case(archive, record, representation, output_dir, *, age_years=None, 
         stream.seek(0)
         with zipfile.ZipFile(stream) as zf:
             reader = ZipRecordReader(zf)
-            resolved, match = resolve_record(record, record_index(zf))
+            index = record_index(zf)
+            if representation == "median" and not index[0] and any(
+                    name.endswith(".med") for name in reader.members):
+                raise metadata_audit.AuditError("official_median_med_format_not_supported")
+            resolved, match = resolve_record(record, index)
             waveform, metadata = reader.read_record(resolved, representation=representation)
     # Match the viewer's finite plotting range. This is a display safeguard,
     # not a clinical signal-quality threshold or a disease classification.
