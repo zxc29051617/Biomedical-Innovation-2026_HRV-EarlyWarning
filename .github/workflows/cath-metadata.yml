@@ -1,0 +1,30 @@
+name: Public pre-angiography ECG metadata audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cath-metadata.yml'
+      - 'scripts/audit_cath_ecg_metadata.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-metadata:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.13'
+      - name: Audit fixed public metadata archive only
+        run: python scripts/audit_cath_ecg_metadata.py --output-dir artifacts/cath_feasibility/public_metadata_v1
+      - name: Save aggregate report without row-level data
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: public-cath-metadata-summary
+          path: artifacts/cath_feasibility/public_metadata_v1/summary.json
+          retention-days: 7

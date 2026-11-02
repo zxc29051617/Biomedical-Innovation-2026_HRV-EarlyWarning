@@ -1,0 +1,40 @@
+{
+  "checked_date": "2026-11-02",
+  "api_url": "https://api.figshare.com/v2/articles/29925314",
+  "doi": "10.6084/m9.figshare.29925314.v1",
+  "version": 1,
+  "title": "A large-scale 12-lead electrocardiogram dataset for acute coronary syndrome prediction containing 19,955 ECGs",
+  "status": "public",
+  "is_metadata_record": false,
+  "is_embargoed": false,
+  "download_disabled": false,
+  "license": {
+    "value": 2,
+    "name": "CC0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/"
+  },
+  "files": [
+    {
+      "id": 62951134,
+      "name": "CSV.zip",
+      "size_bytes": 296769,
+      "download_url": "https://ndownloader.figshare.com/files/62951134",
+      "computed_md5": "1cb46279c0e68e6512bd39214fc56528"
+    },
+    {
+      "id": 62951137,
+      "name": "ECG_median_data.zip",
+      "size_bytes": 140340429,
+      "download_url": "https://ndownloader.figshare.com/files/62951137",
+      "computed_md5": "4da1650cdbfb9817aa66df58c66564e1"
+    },
+    {
+      "id": 62951395,
+      "name": "ECG_row_data.zip",
+      "size_bytes": 1277577332,
+      "download_url": "https://ndownloader.figshare.com/files/62951395",
+      "computed_md5": "acea6ca86a2d0b937ecfe7d1df6d30a2"
+    }
+  ],
+  "scope": "Official catalog metadata verified; patient counts, labels and split overlap require reading CSV.zip. Raw waveform files not downloaded in this audit."
+}
