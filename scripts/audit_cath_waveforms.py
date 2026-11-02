@@ -108,7 +108,9 @@ def resolve_record(value, index):
     if (not value or path.is_absolute() or ".." in path.parts or "\\" in value
             or ":" in value or any(ord(c) < 32 for c in value)):
         raise AuditError("unsafe_csv_record_reference")
-    value = value[:-4] if value.endswith(".hea") else value
+    # Source columns may explicitly name either member of a WFDB record pair.
+    # Strip only the two known member suffixes, never arbitrary extensions.
+    value = value[:-4] if value.endswith((".hea", ".dat")) else value
     exact, basenames = index
     if value in exact:
         return exact[value], "exact_path"
@@ -135,6 +137,7 @@ class Aggregate:
         self.flat_records = 0
         self.raw_wrong_length = 0
         self.header_time_fields = Counter()
+        self.reference_diagnostics = {}
         self.hash_rows = Counter()
         self.hash_patients = defaultdict(set)
         self.hash_labels = defaultdict(set)
@@ -180,6 +183,7 @@ class Aggregate:
             "source_unit_patterns": dict(sorted(self.units.items())),
             "wfdb_format_patterns": dict(sorted(self.formats.items())),
             "header_time_field_presence": dict(sorted(self.header_time_fields.items())),
+            "reference_diagnostics": self.reference_diagnostics,
             "raw_records_not_5000_samples": self.raw_wrong_length,
             "records_with_any_exactly_constant_lead": self.flat_records,
             "global_minimum_mv": self.minimum, "global_maximum_mv": self.maximum,
@@ -217,6 +221,14 @@ def run(output_dir, local_archives=None, representations=("raw", "median")):
         with zipfile.ZipFile(destination / SOURCES[representation]["filename"]) as archive:
             reader = ZipRecordReader(archive)
             index = record_index(archive)
+            aggregate.reference_diagnostics = {
+                "archive_file_extensions": dict(sorted(Counter(
+                    PurePosixPath(m.filename).suffix for m in archive.infolist() if not m.is_dir()).items())),
+                "csv_reference_extensions": dict(sorted(Counter(PurePosixPath(r[field]).suffix for r in rows).items())),
+                "indexed_header_count": len(index[0]),
+                "csv_references_with_backslash": sum("\\" in r[field] for r in rows),
+                "csv_references_with_outer_whitespace": sum(r[field] != r[field].strip() for r in rows),
+            }
             for row in rows:
                 aggregate.attempted += 1
                 try:
@@ -231,7 +243,9 @@ def run(output_dir, local_archives=None, representations=("raw", "median")):
         # Persist each completed representation without copying row-level data.
         write_private(destination / f"{representation}_summary.json", json_bytes(summaries[-1]))
     summary = {
-        "schema_version": "cath-waveform-audit-v1", "status": "structural_audit_complete",
+        "schema_version": "cath-waveform-audit-v1",
+        "status": "structural_audit_complete" if all(s["decoded_train_rows"] > 0 for s in summaries)
+        else "audit_complete_no_decodable_records_in_one_or_more_representations",
         "dataset_doi": "10.6084/m9.figshare.29925314.v1", "license": "CC0",
         "scope": "Named public train.csv only; archive may contain official test records, whose waveforms are not decoded.",
         "train_rows": len(rows), "sources": sources, "representations": summaries,

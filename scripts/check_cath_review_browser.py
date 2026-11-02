@@ -65,6 +65,19 @@ def main() -> None:
         expect(page.locator("#fingerprint")).to_contain_text(expected_hash)
         checks.append("strict blind import, source filename hidden, canonical content fingerprint verified")
 
+        for age in (55.5, 130):
+            age_case = copy.deepcopy(data); age_case["age_years"] = age
+            import_case(age_case)
+            expect(page.locator("#case-meta")).to_contain_text(f"{age} 歲")
+            expect(page.locator("#import-error")).to_be_hidden()
+        assert page.evaluate("""data => [NaN, 131].every(age => {
+            try {CathReviewCore.validateCase({...data, age_years:age}); return false;}
+            catch (_) {return true;}
+        })""", data)
+        import_case(data)
+        expect(page.locator("#fingerprint")).to_contain_text(expected_hash)
+        checks.append("fractional age and 130 accepted; NaN and out-of-range age rejected without adding a cohort exclusion")
+
         canvas = page.locator('canvas[data-lead="II"]')
         canvas.focus()
         canvas.press("Enter")  # First sample, whose lead II voltage is .02 mV.
@@ -91,6 +104,7 @@ def main() -> None:
         bad = copy.deepcopy(data); bad["sample_rate_hz"] = 250; mutations.append(bad)
         bad = copy.deepcopy(data); bad["case_id"] = "Patient_123_ECG_456"; mutations.append(bad)
         bad = copy.deepcopy(data); bad["provenance"]["waveform_sha256"] = "not-a-hash"; mutations.append(bad)
+        bad = copy.deepcopy(data); bad["age_years"] = 131; mutations.append(bad)
         for bad in mutations:
             import_case(bad)
             expect(page.locator("#import-error")).to_be_visible()

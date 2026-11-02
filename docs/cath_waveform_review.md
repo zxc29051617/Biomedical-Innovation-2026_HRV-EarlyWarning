@@ -45,7 +45,20 @@ PYTHONPATH=src python scripts/audit_cath_waveforms.py \
 
 `cath-ecg-review-v1` 只接受 `schema_version`、隨機 `cr-<32 hex>` 的 `case_id`、`age_years`、`sex`、`sample_rate_hz`、`lead_names`、`signals_mv`、`representation`、`provenance`。其中 `signals_mv` 為 sample-major N×12，500 Hz、2–5000 samples；`provenance` 只有解碼後 `waveform_sha256`。年齡可為null，性別可unknown，不憑0／1自行猜來源編碼。
 
+年齡若提供，接受0–130的有限數值；此為檔案輸入範圍，不代表正式收案資格。複核介面另限制單點絕對值不超過100mV，匯出器同步拒絕超出者；這是顯示工具的輸入界限，不是臨床品質門檻。完整波形稽核仍保留解碼後的實際振幅統計，不以此限值偷偷移除研究病例。
+
 來源患者、ECG檔名、相對造影時間與所有結局不得進盲包。`build_blinded_review_case()` 重算波形指紋再建立白名單；來源對照必須留在資料管理者的忽略目錄。前端另以遞迴排序鍵、JS JSON.stringify 的序列化定義計算 `case_sha256`，不能直接假設 Python 不同數字序列化會得到相同雜湊。
+
+單例匯出指令如下；`--record` 必須由資料管理者提供明確來源紀錄參照，此工具不自動選例，也不能把手選示例當隨機或主要研究樣本：
+
+```sh
+python scripts/export_cath_review_case.py \
+  --archive artifacts/cath_feasibility/waveforms_new_run/ECG_row_data.zip \
+  --record SOURCE_RECORD_REFERENCE --representation raw \
+  --output-dir artifacts/cath_feasibility/review_case_new
+```
+
+可另外提供 `--age-years` 與 `--sex male|female|unknown`；未提供時保留未知。匯出器完整校驗官方 ZIP，產生 `case.json` 及 `source_mapping.local.json`，後者包含私密來源對照。**只交 `case.json` 給兩位獨立判讀者，來源對照留在資料管理端。** 目錄0700、檔案0600，禁止覆寫；輸出不讀取或推導疾病標籤。第一次到院、就醫事件及實際檢查時間維持未知。
 
 ## 驗證狀態
 

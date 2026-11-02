@@ -170,6 +170,12 @@ class RecordResolutionTests(unittest.TestCase):
     def test_unique_basename_is_explicit_fallback(self):
         self.assertEqual(audit.resolve_record("unique", self.index()), ("raw/unique", "unique_basename"))
 
+    def test_explicit_wfdb_data_member_suffix_resolves_same_record(self):
+        self.assertEqual(audit.resolve_record("raw/unique.dat", self.index()), ("raw/unique", "exact_path"))
+        self.assertEqual(audit.resolve_record("unique.dat", self.index()), ("raw/unique", "unique_basename"))
+        with self.assertRaisesRegex(audit.AuditError, "^record_reference_missing$"):
+            audit.resolve_record("unique.csv", self.index())
+
     def test_missing_and_ambiguous_references_have_value_free_codes(self):
         for value, code in (("private-missing", "record_reference_missing"),
                             ("one", "record_reference_ambiguous")):

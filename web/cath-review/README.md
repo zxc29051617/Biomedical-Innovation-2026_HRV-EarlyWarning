@@ -19,7 +19,7 @@
 | 欄位 | 規格 |
 |---|---|
 | `case_id` | `cr-` 加32位小寫十六進位的盲性代碼；由資料管理者產生，不能直接使用 Patient_id 或來源檔名 |
-| `age_years` | 0–120的整數或 `null` |
+| `age_years` | 0–130的有限數值或 `null`，可含小數；此為匯入格式檢查，不是研究族群年齡排除規則 |
 | `sex` | `male`、`female`、`unknown` |
 | `sample_rate_hz` | 本版只接受500 |
 | `lead_names` | 完整且不重複的 I、II、III、aVR、aVL、aVF、V1–V6，可任意排序 |

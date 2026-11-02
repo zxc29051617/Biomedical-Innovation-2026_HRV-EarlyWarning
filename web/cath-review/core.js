@@ -15,7 +15,7 @@
     if (!exactKeys(value, ROOT_KEYS)) fail("病例欄位不符：僅接受固定盲性 schema，不接受額外欄位、診斷或分數。");
     if (value.schema_version !== "cath-ecg-review-v1") fail("病例 schema 版本不支援。");
     if (typeof value.case_id !== "string" || !/^cr-[0-9a-f]{32}$/.test(value.case_id)) fail("病例代碼必須是 cr- 加 32 位小寫十六進位盲性代碼。");
-    if (value.age_years !== null && (!Number.isInteger(value.age_years) || value.age_years < 0 || value.age_years > 120)) fail("年齡必須是 0–120 的整數或 null。");
+    if (value.age_years !== null && (!Number.isFinite(value.age_years) || value.age_years < 0 || value.age_years > 130)) fail("年齡必須是 0–130 的有限數值或 null。");
     if (!["male", "female", "unknown"].includes(value.sex)) fail("性別欄位不符。");
     if (value.sample_rate_hz !== 500) fail("本版僅接受已確認 500 Hz 的 ECG。");
     if (!["raw", "median"].includes(value.representation)) fail("波形形式必須為 raw 或 median。");

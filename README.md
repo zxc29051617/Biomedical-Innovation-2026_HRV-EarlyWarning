@@ -4,6 +4,8 @@
 
 這是由王獻霆與朋友自主組隊開發的專案。GitHub repo：[Biomedical-Innovation-2026_HRV-EarlyWarning](https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning)。
 
+目前主線為[造影前 ECG 急性冠脈阻塞辨識](docs/omi_study_protocol.md)。新增可直接開啟的[十二導程盲性複核工具](web/cath-review/index.html)，提供合成練習、波形游標及獨立判讀匯出；[波形稽核與操作說明](docs/cath_waveform_review.md)記錄資料尺度、盲包與驗證狀態。下方 HRV 展示及結果為先前版本，並非 OMI 模型。
+
 本專案以既有 `fish_yang_MI` 的 ECG 與 HRV 研究經驗為基礎，建立獨立、可重跑的重症預警研究管線。第一版使用 MIMIC-III 成人 MetaVision ICU 資料，研究「未來 6 小時內首次開始持續使用升壓劑」的風險；敗血症是預先指定的重點分析子群。
 
 ## 直接操作展示
@@ -156,6 +158,8 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [可信監測與警報複核的下一版方向](docs/trustworthy_monitoring_direction.md)
 - [心導管相關預測的資料與目標可行性](docs/catheterization_feasibility.md)
 - [急性冠脈阻塞辨識的研究規格草案](docs/omi_study_protocol.md)
+- [來源標籤與重複紀錄的語義審查](docs/cath_label_semantics.md)
+- [十二導程波形稽核與盲性複核工具](docs/cath_waveform_review.md)
 - [回到 MI 的資料與方法可行性](docs/mi_feasibility_review.md)
 - [展示操作與三分鐘導覽](docs/demo_walkthrough.md)
 - [產品交付與驗收紀錄](docs/product_delivery.md)
