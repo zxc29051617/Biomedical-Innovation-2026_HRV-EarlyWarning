@@ -1,0 +1,727 @@
+{
+  "schema_version": "cath-ecg-metadata-audit-v2",
+  "status": "metadata_audit_complete",
+  "csv_count": 2,
+  "expanded_bytes_read": 1521609,
+  "csv_summaries": [
+    {
+      "csv_member": "CSV/test.csv",
+      "row_count": 1995,
+      "blank_lines_skipped": 0,
+      "columns": [
+        "Patient_id",
+        "ecg_row_record",
+        "ecg_med_record",
+        "gender",
+        "age",
+        "Time_Interval"
+      ],
+      "patient_id": {
+        "column_present": true,
+        "nonempty_rows": 1995,
+        "missing_rows": 0,
+        "distinct_count": 1891,
+        "duplicate_rows_beyond_first_per_id": 104
+      },
+      "time_interval_minutes": {
+        "column_present": true,
+        "counts": {
+          "missing": 0,
+          "invalid": 0,
+          "valid": 1995,
+          "noninteger_valid": 0
+        },
+        "minimum": 25,
+        "maximum": 10073,
+        "ranges": {
+          "negative": 0,
+          "zero_to_60_minutes": 17,
+          "over_60_to_360_minutes": 369,
+          "over_360_to_1440_minutes": 450,
+          "over_1440_to_10080_minutes": 1159,
+          "over_10080_minutes": 0
+        }
+      },
+      "labels": {
+        "AMI": {
+          "column_present": false,
+          "counts": null
+        },
+        "OMI": {
+          "column_present": false,
+          "counts": null
+        },
+        "PCI": {
+          "column_present": false,
+          "counts": null
+        },
+        "ACS": {
+          "column_present": false,
+          "counts": null
+        },
+        "STEMI": {
+          "column_present": false,
+          "counts": null
+        },
+        "NSTEMI": {
+          "column_present": false,
+          "counts": null
+        },
+        "CTO": {
+          "column_present": false,
+          "counts": null
+        },
+        "Prior_PCI": {
+          "column_present": false,
+          "counts": null
+        }
+      },
+      "ecg_filename_fields": {
+        "raw_ecg_filename": [
+          {
+            "column": "ecg_row_record",
+            "nonempty": 1995,
+            "missing": 0
+          }
+        ],
+        "median_ecg_filename": [
+          {
+            "column": "ecg_med_record",
+            "nonempty": 1995,
+            "missing": 0
+          }
+        ]
+      },
+      "source_label_feasibility": {
+        "source_omi": {
+          "column_present": false,
+          "counts_by_value": null
+        },
+        "source_omi_one_and_source_stemi_zero": {
+          "both_label_columns_present": false,
+          "counts": null
+        },
+        "time_interval_by_source_omi": {
+          "both_columns_present": false,
+          "strata": null
+        },
+        "patient_record_count_distribution": {
+          "patient_id_column_present": true,
+          "distribution": [
+            {
+              "record_count": 1,
+              "patient_count": 1788
+            },
+            {
+              "record_count": 2,
+              "patient_count": 102
+            },
+            {
+              "record_count": 3,
+              "patient_count": 1
+            }
+          ],
+          "patients_with_multiple_records": 103
+        },
+        "source_label_variation_within_patient": {
+          "AMI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "OMI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "PCI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "ACS": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "STEMI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "NSTEMI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "CTO": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "Prior_PCI": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          }
+        }
+      }
+    },
+    {
+      "csv_member": "CSV/train.csv",
+      "row_count": 17960,
+      "blank_lines_skipped": 0,
+      "columns": [
+        "Patient_id",
+        "ecg_row_record",
+        "ecg_med_record",
+        "gender",
+        "age",
+        "Time_Interval",
+        "AMI",
+        "OMI",
+        "CTO",
+        "PCI",
+        "NSTEMI",
+        "STEMI",
+        "UA",
+        "LM",
+        "PLAD",
+        "MLAD",
+        "DLAD",
+        "DB",
+        "PLCX",
+        "MLCX",
+        "DLCX",
+        "OM",
+        "PRCA",
+        "MRCA",
+        "DRCA",
+        "VF_VT",
+        "Paced",
+        "Prior_PCI"
+      ],
+      "patient_id": {
+        "column_present": true,
+        "nonempty_rows": 17960,
+        "missing_rows": 0,
+        "distinct_count": 17018,
+        "duplicate_rows_beyond_first_per_id": 942
+      },
+      "time_interval_minutes": {
+        "column_present": true,
+        "counts": {
+          "missing": 0,
+          "invalid": 0,
+          "valid": 17960,
+          "noninteger_valid": 0
+        },
+        "minimum": 5,
+        "maximum": 10079,
+        "ranges": {
+          "negative": 0,
+          "zero_to_60_minutes": 219,
+          "over_60_to_360_minutes": 3577,
+          "over_360_to_1440_minutes": 4089,
+          "over_1440_to_10080_minutes": 10075,
+          "over_10080_minutes": 0
+        }
+      },
+      "labels": {
+        "AMI": {
+          "column_present": true,
+          "counts": {
+            "zero": 15281,
+            "one": 2679,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "OMI": {
+          "column_present": true,
+          "counts": {
+            "zero": 16809,
+            "one": 1151,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "PCI": {
+          "column_present": true,
+          "counts": {
+            "zero": 13419,
+            "one": 4541,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "ACS": {
+          "column_present": false,
+          "counts": null
+        },
+        "STEMI": {
+          "column_present": true,
+          "counts": {
+            "zero": 16518,
+            "one": 1442,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "NSTEMI": {
+          "column_present": true,
+          "counts": {
+            "zero": 16725,
+            "one": 1235,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "CTO": {
+          "column_present": true,
+          "counts": {
+            "zero": 17003,
+            "one": 957,
+            "missing": 0,
+            "other": 0
+          }
+        },
+        "Prior_PCI": {
+          "column_present": true,
+          "counts": {
+            "zero": 16637,
+            "one": 1323,
+            "missing": 0,
+            "other": 0
+          }
+        }
+      },
+      "ecg_filename_fields": {
+        "raw_ecg_filename": [
+          {
+            "column": "ecg_row_record",
+            "nonempty": 17960,
+            "missing": 0
+          }
+        ],
+        "median_ecg_filename": [
+          {
+            "column": "ecg_med_record",
+            "nonempty": 17960,
+            "missing": 0
+          }
+        ]
+      },
+      "source_label_feasibility": {
+        "source_omi": {
+          "column_present": true,
+          "counts_by_value": {
+            "zero": {
+              "row_count": 16809,
+              "distinct_patient_count": 15994,
+              "missing_patient_id_rows": 0
+            },
+            "one": {
+              "row_count": 1151,
+              "distinct_patient_count": 1139,
+              "missing_patient_id_rows": 0
+            },
+            "missing": {
+              "row_count": 0,
+              "distinct_patient_count": 0,
+              "missing_patient_id_rows": 0
+            },
+            "other": {
+              "row_count": 0,
+              "distinct_patient_count": 0,
+              "missing_patient_id_rows": 0
+            }
+          }
+        },
+        "source_omi_one_and_source_stemi_zero": {
+          "both_label_columns_present": true,
+          "counts": {
+            "row_count": 424,
+            "distinct_patient_count": 418,
+            "missing_patient_id_rows": 0
+          }
+        },
+        "time_interval_by_source_omi": {
+          "both_columns_present": true,
+          "strata": {
+            "negative": {
+              "zero": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "zero_to_60_minutes": {
+              "zero": {
+                "row_count": 194,
+                "distinct_patient_count": 194,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 25,
+                "distinct_patient_count": 25,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "over_60_to_360_minutes": {
+              "zero": {
+                "row_count": 3129,
+                "distinct_patient_count": 3093,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 448,
+                "distinct_patient_count": 447,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "over_360_to_1440_minutes": {
+              "zero": {
+                "row_count": 3787,
+                "distinct_patient_count": 3728,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 302,
+                "distinct_patient_count": 301,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "over_1440_to_10080_minutes": {
+              "zero": {
+                "row_count": 9699,
+                "distinct_patient_count": 9420,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 376,
+                "distinct_patient_count": 375,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "over_10080_minutes": {
+              "zero": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "missing": {
+              "zero": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            },
+            "invalid": {
+              "zero": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "one": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "missing": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              },
+              "other": {
+                "row_count": 0,
+                "distinct_patient_count": 0,
+                "missing_patient_id_rows": 0
+              }
+            }
+          }
+        },
+        "patient_record_count_distribution": {
+          "patient_id_column_present": true,
+          "distribution": [
+            {
+              "record_count": 1,
+              "patient_count": 16163
+            },
+            {
+              "record_count": 2,
+              "patient_count": 777
+            },
+            {
+              "record_count": 3,
+              "patient_count": 70
+            },
+            {
+              "record_count": 4,
+              "patient_count": 7
+            },
+            {
+              "record_count": 5,
+              "patient_count": 1
+            }
+          ],
+          "patients_with_multiple_records": 855
+        },
+        "source_label_variation_within_patient": {
+          "AMI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 14592,
+              "patients_with_any_one": 2640,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 214
+            }
+          },
+          "OMI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 15994,
+              "patients_with_any_one": 1139,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 115
+            }
+          },
+          "PCI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 13044,
+              "patients_with_any_one": 4210,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 236
+            }
+          },
+          "ACS": {
+            "label_column_present": false,
+            "patient_id_column_present": true,
+            "counts": null
+          },
+          "STEMI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 15702,
+              "patients_with_any_one": 1437,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 121
+            }
+          },
+          "NSTEMI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 15917,
+              "patients_with_any_one": 1214,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 113
+            }
+          },
+          "CTO": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 16206,
+              "patients_with_any_one": 924,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 112
+            }
+          },
+          "Prior_PCI": {
+            "label_column_present": true,
+            "patient_id_column_present": true,
+            "counts": {
+              "patients_with_any_zero": 16127,
+              "patients_with_any_one": 1237,
+              "patients_with_any_missing": 0,
+              "patients_with_any_other": 0,
+              "patients_with_both_zero_and_one": 346
+            }
+          }
+        }
+      }
+    }
+  ],
+  "cross_csv_patient_id_overlap": [
+    {
+      "left_csv": "CSV/test.csv",
+      "right_csv": "CSV/train.csv",
+      "shared_patient_id_count": 0,
+      "both_patient_id_columns_present": true
+    }
+  ],
+  "interpretation_limits": [
+    "Procedure/treatment flags do not establish treatment necessity or angiographic stenosis ground truth.",
+    "Counts do not establish label definitions, pre-procedure timing, independent patients, or model performance.",
+    "Source STEMI=0 does not identify ECGs failing a prespecified ST-elevation criterion.",
+    "Patient-level any-positive counts are descriptive, not deduplicated primary ECGs or adjudicated event labels.",
+    "Time_Interval alone cannot identify the first-arrival ECG without absolute timestamps and encounter/procedure linkage.",
+    "Metadata counts do not define a modeling cohort or establish waveform eligibility."
+  ],
+  "audit_rules": {
+    "header_normalization": "strip outer whitespace, casefold, replace whitespace runs with underscore; no punctuation guessing",
+    "patient_id_normalization": "strip outer whitespace; preserve case and leading zeros; never emit values",
+    "missing_tokens_case_insensitive": [
+      "",
+      "n/a",
+      "na",
+      "nan",
+      "none",
+      "null"
+    ],
+    "time_interval_unit": "minutes, as specified by source paper Table 2",
+    "time_parser": "finite numeric minutes only; nonnumeric values count as invalid; no duration-format guessing",
+    "label_parser": "numeric 0/1, explicit missing tokens, otherwise other; no clinical meaning inferred",
+    "source_label_feasibility": {
+      "patient_counts": "Distinct nonmissing IDs within each same-row condition; patients can appear in multiple cells, so counts are not additive.",
+      "missing_columns": "Unavailable aggregates are null, not zero; rows without IDs still count as records but not patients.",
+      "source_stemi_zero": "The source STEMI diagnosis field equals zero on the same row; this is not same-ECG STEMI-criteria negativity.",
+      "time_strata": "Fixed TIME_BINS plus missing and invalid minutes; no time window or primary ECG is selected.",
+      "label_variation": "An ID with both zero and one is reported without resolving labels or treating the difference as an error."
+    },
+    "filename_field_aliases": {
+      "patient_id": [
+        "patient_id"
+      ],
+      "time_interval": [
+        "time_interval"
+      ],
+      "raw_ecg_filename": [
+        "ecg_row_record",
+        "ecg_raw_record",
+        "raw_ecg_filename",
+        "raw_filename"
+      ],
+      "median_ecg_filename": [
+        "ecg_med_record",
+        "median_ecg_filename",
+        "median_filename"
+      ]
+    },
+    "not_a_modeling_cohort_or_waveform_eligibility_audit": true,
+    "no_ecg_waveforms_read": true,
+    "no_models_fitted_or_evaluated": true
+  },
+  "source": {
+    "source_url": "https://ndownloader.figshare.com/files/62951134",
+    "figshare_article_id": 29925314,
+    "figshare_version": 1,
+    "figshare_file_id": 62951134,
+    "license": "CC0",
+    "acquisition": "fixed_official_url",
+    "expected_bytes": 296769,
+    "expected_md5": "1cb46279c0e68e6512bd39214fc56528",
+    "verified": {
+      "bytes": 296769,
+      "md5": "1cb46279c0e68e6512bd39214fc56528",
+      "sha256": "675a57e90eea1175259301293812ec0a23c73f83ec7fb352a8309f05843d0005"
+    },
+    "script_sha256": "4dbd540c90ea1f6058f66ec86d3b069fde3ecbfdbe1300ab545f9445384b274e"
+  },
+  "execution": {
+    "source_commit": "2a4cb0bf326f3aa98728fac82475b1fea14b3da5",
+    "workflow_run_id": 41429433618,
+    "workflow_job_id": 125224014271,
+    "workflow_url": "https://github.com/zxc29051617/Biomedical-Innovation-2026_HRV-EarlyWarning/actions/runs/41429433618",
+    "status": "success",
+    "method": "Fixed public CSV.zip downloaded and checksum-verified in public CI; no waveform or local MIMIC data used."
+  }
+}
