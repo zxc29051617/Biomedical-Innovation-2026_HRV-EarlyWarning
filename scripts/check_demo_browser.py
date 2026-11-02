@@ -41,6 +41,67 @@ def main() -> None:
             page.locator("#timeline").evaluate(
                 "(el, i) => {el.value = String(i); el.dispatchEvent(new Event('input', {bubbles: true}));}", index)
 
+        expect(page.locator("#monitor-title")).to_be_visible()
+        expect(page.locator(".monitor-gate")).to_contain_text("RR 增強未啟用")
+        expect(page.locator(".monitor-freshness")).to_have_text("資料新鮮度：未提供")
+        # Pure audit logic must not interpolate gaps, approve RR or use future data.
+        assert page.evaluate("""() => {
+            const core = HRVAppCore;
+            const item = JSON.parse(JSON.stringify(HRV_DEMO.cases[0]));
+            const before = JSON.stringify(core.monitoringTrace(item, 3, 'synthetic', false));
+            item.points.slice(4).forEach(p => {p.vitals.heart_rate_bpm = 200; p.scores.vitals_all = 0.9;});
+            item.event_hour = 24;
+            if (JSON.stringify(core.monitoringTrace(item, 3, 'synthetic', false)) !== before) return false;
+            const gap = JSON.parse(JSON.stringify(HRV_DEMO.cases[0]));
+            gap.points.splice(1, 1);
+            const gaps = core.monitoringTrace(gap, 1, 'synthetic', false);
+            if (gaps.rows.length !== 2 || gaps.coverage.provided_eligible_updates !== 2 || gaps.unfilled_time_gaps.length !== 1) return false;
+            const missing = JSON.parse(JSON.stringify(HRV_DEMO.cases[0]));
+            Object.keys(missing.points[0].vitals).forEach(key => {missing.points[0].vitals[key] = null;});
+            const sparse = core.monitoringTrace(missing, 0, 'synthetic', false).rows[0];
+            if (sparse.path !== 'baseline_with_all_vitals_missing' || sparse.visible_vital_count !== 0 || !sparse.baseline_score_available) return false;
+            missing.points[0].scores.vitals_all = null;
+            if (core.monitoringTrace(missing, 0, 'synthetic', false).rows[0].path !== 'baseline_unavailable') return false;
+            const ended = core.monitoringTrace(HRV_DEMO.cases[1], 18, 'synthetic', true).rows[18];
+            if (ended.path !== 'stopped' || ended.baseline_score !== null || ended.rr_research_available || ended.visible_vital_count !== null) return false;
+            const terminal = core.monitoringTrace(HRV_DEMO.cases[0], HRV_DEMO.cases[0].points.length, 'synthetic', true).rows.at(-1);
+            if (terminal.path !== 'stopped' || terminal.eligible_update) return false;
+            const local = core.monitoringTrace(HRV_DEMO.cases[0], 2, 'local_research', true);
+            return local.view === 'source_replay' && local.rows.every(r => r.rr_view === 'source_replay' && r.rr_enhancement_enabled === false)
+                && local.evidence_gate.incremental_value === 'not_supported_by_development_comparison';
+        }""")
+        checks.append("monitoring audit preserves gaps, missing-input warnings, evidence gate, time cutoff and stop states")
+
+        seek(3)
+        risk_before = page.locator("#risk-chart").inner_html()
+        score_before = page.locator("#risk-value").inner_text()
+        notices_before = page.locator("#notification-count").inner_text()
+        baseline_before = page.locator("#monitor-baseline-score").inner_text()
+        source_before = page.evaluate("JSON.stringify(HRV_DEMO)")
+        page.locator("#simulate-ecg").check()
+        expect(page.locator("#monitor-view")).to_have_text("ECG 中斷演練")
+        expect(page.locator("#monitor-rr-state")).to_have_text("演練：ECG 中斷")
+        expect(page.locator("#monitor-baseline-score")).to_have_text(baseline_before)
+        assert page.locator("#risk-chart").inner_html() == risk_before
+        assert page.locator("#risk-value").inner_text() == score_before
+        assert page.locator("#notification-count").inner_text() == notices_before
+        assert page.evaluate("JSON.stringify(HRV_DEMO)") == source_before
+        with page.expect_download() as monitor_download_info:
+            page.locator("#export-monitoring").click()
+        monitor_download_info.value.save_as(OUTPUT / "synthetic-monitoring-trace.json")
+        trace = json.loads((OUTPUT / "synthetic-monitoring-trace.json").read_text())
+        assert trace["view"] == "simulated_ecg_interruption"
+        assert trace["cutoff_relative_hour"] == 9
+        assert len(trace["rows"]) == 4
+        assert all(row["relative_hour"] <= 9 and not row["rr_research_available"] for row in trace["rows"])
+        assert trace["coverage"]["provided_eligible_updates"] == 4
+        assert trace["coverage"]["denominator"] == "provided_eligible_update_points_only"
+        assert "event_hour" not in trace and "followup_end_hour" not in trace
+        assert not trace["evidence_gate"]["rr_enhancement_enabled"]
+        page.locator("#simulate-ecg").uncheck()
+        expect(page.locator("#monitor-rr-state")).to_have_text("工程片段可研究檢視")
+        checks.append("synthetic ECG interruption changes panel only; trace download contains cutoff and simulation provenance")
+
         page.locator("#rewind").click()
         expect(page.locator("#timeline")).to_have_value("0")
         page.locator("#step").click()
@@ -54,13 +115,20 @@ def main() -> None:
         expect(page.locator("#play-pause")).to_have_attribute("aria-pressed", "false")
         checks.append("rewind / step / accelerated playback / pause")
 
+        page.locator("#simulate-ecg").check()
         page.locator("#case-list button").nth(2).click()
+        expect(page.locator("#simulate-ecg")).not_to_be_checked()
         seek(4)  # Synthetic hour 10 is explicitly rejected.
         expect(page.locator("#risk-value")).to_have_text("—")
         expect(page.locator("#rmssd")).to_have_text("—")
         page.locator("#model-select").select_option("vitals_all")
         expect(page.locator("#risk-value")).not_to_have_text("—")
         page.locator("#model-select").select_option("paired_history_rr")
+        expect(page.locator("#monitor-rr-state")).to_have_text("RR 暫停研究檢視")
+        expect(page.locator("#monitor-baseline-score")).not_to_have_text("—")
+        seek(11)  # Hour 17 has two observed vital inputs, not four fresh readings.
+        expect(page.locator("#monitor-input-count")).to_have_text("2 / 4 項有數值")
+        expect(page.locator("#monitor-input-detail")).to_contain_text("未提供：心率、平均動脈壓")
         checks.append("quality rejection suppresses paired models; vitals baseline remains available")
 
         page.locator("#case-list button").nth(1).click()
@@ -99,12 +167,16 @@ def main() -> None:
         # Test a hostile label and forged quality/scores without importing any real case.
         synthetic["cases"][0]["label"] = '<img src=x onerror="window.injected=true">'
         synthetic["mode"] = "local_research"
+        page.locator("#simulate-ecg").check()
         page.locator("#import-file").set_input_files({
             "name": "synthetic-schema-test.json", "mimeType": "application/json",
             "buffer": json.dumps(synthetic).encode(),
         })
         expect(page.locator("#score-kind")).to_have_text("研究模型分數")
         expect(page.locator("#case-title")).to_have_text(synthetic["cases"][0]["label"])
+        expect(page.locator("#simulate-ecg")).to_be_disabled()
+        expect(page.locator("#simulate-ecg")).not_to_be_checked()
+        expect(page.locator("#monitor-view")).to_have_text("原始重播視圖")
         assert page.locator("#case-title img").count() == 0
         assert not page.evaluate("Boolean(window.injected)")
         bad = json.loads(json.dumps(synthetic))
@@ -116,6 +188,7 @@ def main() -> None:
         expect(page.locator("#import-error")).to_be_visible()
         expect(page.locator("#case-title")).to_have_text(synthetic["cases"][0]["label"])
         checks.append("local JSON import / DOM escaping / invalid quality rejection preserves current dataset")
+        checks.append("case changes reset rehearsal; research import disables rehearsal and preserves separate source view")
 
         page.locator("#restore-demo").click()
         expect(page.locator("#score-kind")).to_have_text("合成示意分數")
@@ -132,6 +205,9 @@ def main() -> None:
         expect(page.locator("#view-evidence")).to_be_visible()
         expect(page.locator("#view-evidence")).to_contain_text("0.02419")
         expect(page.locator("#view-evidence")).to_contain_text("630")
+        expect(page.locator("#controls-evidence")).to_contain_text("0.03046")
+        expect(page.locator("#controls-evidence")).to_contain_text("−0.00289")
+        expect(page.locator("#controls-evidence")).to_contain_text("[−0.01540, 0.01764]")
         page.screenshot(path=str(OUTPUT / "evidence-desktop.png"), full_page=True)
         page.locator('[data-view="replay"]').first.click()
         seek(14)

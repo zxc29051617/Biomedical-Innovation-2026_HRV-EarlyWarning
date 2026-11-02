@@ -8,7 +8,7 @@
 
 ## 直接操作展示
 
-下載或 clone 此 repo，直接用瀏覽器開啟 **[web/index.html](web/index.html)**；不需安裝套件或連線。包含三個合成病例、播放與時間滑桿、五組模型切換、風險與生命徵象圖、RR 品質拒絕狀態，以及真實研究彙總結果。GitHub 檔案預覽不會執行網頁，請下載後開啟。
+下載或 clone 此 repo，直接用瀏覽器開啟 **[web/index.html](web/index.html)**；不需安裝套件或連線。包含三個合成病例、播放與時間滑桿、五組模型切換、風險與生命徵象圖、RR 品質拒絕狀態，以及真實研究彙總結果。另可操作合成 ECG 中斷演練，檢查固定常規基準、輸入缺值與 RR 暫停理由，並匯出目前以前的監測軌跡。演練只影響獨立面板，不改原分數、曲線或通知；本機研究病例停用演練。GitHub 檔案預覽不會執行網頁，請下載後開啟。
 
 也可以從 repo 根目錄執行 `python scripts/serve_demo.py`，再開啟終端顯示的本機網址。若環境不允許開啟監聽埠，直接開 HTML 即可。操作與三分鐘展示腳本見 [demo walkthrough](docs/demo_walkthrough.md)。
 
@@ -34,7 +34,9 @@ Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗，完成 340,354 �
 
 [相同搏動集合的定位對照](docs/timing_comparison.md)已實測完成：125 Hz 下原本看似很大的 RR 誤差差距，配對後縮小為逐窗 MAE 中位數 3.23 對 2.99 ms；候選仍有漏搏代價，原生 360 Hz 也沒有一致改善，維持不接入 M2。[20 名訓練患者的盲標選例](docs/rr_annotation_preparation.md)已凍結，包含工程接受／拒絕各 10 名；波形包與雙人標註尚未完成。
 
-[可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)已完成程式、合成資料驗收及真實資料 preflight。新模型擬合仍待本機科學 Python 環境恢復，尚無新患者模型成績，不能把程式測試當成預警增益。
+[可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)已於 2026-11-02 用另一個本機科學環境完成真實擬合，原基準重現通過。控制平均速率、歷史與可用性後，加入 RR 變異的 AUPRC 為 0.03046 → 0.02757，差值 −0.00289 [−0.01540, +0.01764]，仍未提供額外預警增益證據；五組及所有相鄰對照完整保留。保留測試未開啟，模型與患者產物留在本機。
+
+下一版[可信監測與警報複核提案](docs/trustworthy_monitoring_direction.md)將重點放在訊號支持、資料失效與可追查的處理行為，並評估使用公開真／假警報標籤的可能性。這是方向提案與工程原型增量，不是已驗證的新臨床模型；原研究終點與固定快取維持不變。
 
 [MI 備案審查](docs/mi_feasibility_review.md)也已完成：舊題目是 MI 患者的死亡風險、以結局倒推取窗，既有探索只有 141 人、37 個死亡，不能直接當作較大樣本的發作前預警題目。暫不換題，先按實測的量測與覆蓋證據決定下一步。
 
@@ -147,6 +149,7 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [ICU 雙人盲標的固定選例與準備狀態](docs/rr_annotation_preparation.md)
 - [實際患者／事件／時間覆蓋率](docs/coverage_review.md)
 - [RR 額外資訊的探索性控制模型](docs/incremental_value_review.md)
+- [可信監測與警報複核的下一版方向](docs/trustworthy_monitoring_direction.md)
 - [回到 MI 的資料與方法可行性](docs/mi_feasibility_review.md)
 - [展示操作與三分鐘導覽](docs/demo_walkthrough.md)
 - [產品交付與驗收紀錄](docs/product_delivery.md)

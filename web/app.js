@@ -165,11 +165,49 @@
     return times;
   }
   function arrivedEvent(item, hour, enabled) { return enabled && item.event_hour !== null && item.event_hour <= hour ? item.event_hour : null; }
-  root.HRVAppCore = {validateDataset: validateDataset, makeReplayPoints: makeReplayPoints, visiblePoints: visiblePoints, chartSegments: chartSegments, historyCoverage: historyCoverage, notificationEvents: notificationEvents, arrivedEvent: arrivedEvent, maxFileBytes: MAX_FILE_BYTES};
+  function monitoringTrace(item, index, mode, simulateEcg) {
+    // This is a replay audit, not a new model or a calibrated routing policy.
+    // Only provided points up to index are examined; unknown time gaps stay unknown.
+    var simulated = mode === "synthetic" && simulateEcg === true;
+    var points = visiblePoints(makeReplayPoints(item), index);
+    var gaps = [], previous = null;
+    var rows = points.map(function (point) {
+      if (previous !== null && point.hour - previous > 1 + EPSILON) gaps.push({after_hour: previous, before_hour: point.hour});
+      previous = point.hour;
+      var ended = Boolean(point._terminal) || point.hour >= item.followup_end_hour || (item.event_hour !== null && point.hour >= item.event_hour);
+      var eligible = !ended && point.hour >= 6;
+      var present = eligible ? METRICS.filter(function (m) { return point.vitals[m.key] !== null; }).map(function (m) { return m.key; }) : [];
+      var missing = eligible ? METRICS.filter(function (m) { return point.vitals[m.key] === null; }).map(function (m) { return m.key; }) : [];
+      var score = eligible ? point.scores.vitals_all : null;
+      var sourceRr = eligible && point.rr.accepted;
+      var rrAvailable = sourceRr && !simulated;
+      var reasons = ended ? ["risk_followup_ended"] : !eligible ? ["before_first_landmark"] : simulated ? ["simulated_ecg_interruption"] : sourceRr ? [] : point.rr.reason_codes.length ? point.rr.reason_codes.slice() : ["missing_rr_information"];
+      var path = ended ? "stopped" : !eligible ? "before_first_landmark" : score === null ? "baseline_unavailable" : present.length === 0 ? "baseline_with_all_vitals_missing" : rrAvailable ? "baseline_and_rr_research" : "baseline_only";
+      return {relative_hour: point.hour, eligible_update: eligible, path: path,
+        baseline_model: "vitals_all", baseline_score: score, baseline_score_available: score !== null,
+        visible_vital_count: eligible ? present.length : null, present_vital_keys: present, missing_vital_keys: missing,
+        vital_freshness: "not_provided", source_rr_engineering_accepted: point.rr.accepted,
+        rr_research_available: rrAvailable, rr_reason_codes: reasons,
+        rr_view: eligible && simulated ? "simulated_interruption" : "source_replay",
+        rr_enhancement_enabled: false};
+    });
+    var eligibleRows = rows.filter(function (row) { return row.eligible_update; });
+    return {schema_version: "hrv-monitoring-trace-v1", mode: mode,
+      view: simulated ? "simulated_ecg_interruption" : "source_replay",
+      simulation_scope: simulated ? "all_visible_eligible_updates_in_this_panel_only" : null,
+      cutoff_relative_hour: rows.length ? rows[rows.length - 1].relative_hour : null,
+      evidence_gate: {rr_enhancement_enabled: false, timing_and_nn: "not_validated", incremental_value: "not_supported_by_development_comparison"},
+      coverage: {denominator: "provided_eligible_update_points_only", provided_eligible_updates: eligibleRows.length,
+        baseline_score_updates: eligibleRows.filter(function (row) { return row.baseline_score_available; }).length,
+        rr_research_updates: eligibleRows.filter(function (row) { return row.rr_research_available; }).length,
+        updates_with_all_vitals_missing: eligibleRows.filter(function (row) { return row.visible_vital_count === 0; }).length},
+      unfilled_time_gaps: gaps, rows: rows};
+  }
+  root.HRVAppCore = {validateDataset: validateDataset, makeReplayPoints: makeReplayPoints, visiblePoints: visiblePoints, chartSegments: chartSegments, historyCoverage: historyCoverage, notificationEvents: notificationEvents, arrivedEvent: arrivedEvent, monitoringTrace: monitoringTrace, maxFileBytes: MAX_FILE_BYTES};
   if (typeof document === "undefined") return;
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = {dataset: validateDataset(root.HRV_DEMO), caseIndex: 0, index: 6, model: "paired_history_rr", timer: null, view: "replay", importVersion: 0};
+  var state = {dataset: validateDataset(root.HRV_DEMO), caseIndex: 0, index: 6, model: "paired_history_rr", timer: null, view: "replay", importVersion: 0, simulateEcg: false};
   var replayPoints = [];
   var vitalElements = {};
   var REASONS = {nonfinite_samples: "含有缺失或非有限訊號", low_block_beat_agreement: "分段搏動偵測一致性不足", insufficient_valid_rr_duration: "有效 RR 覆蓋時間不足", low_detector_agreement: "搏動偵測器一致性不足", low_beat_agreement: "搏動偵測一致性不足", excessive_rr_outliers: "異常 RR 比例過高", insufficient_beats: "可用搏動數不足", invalid_signal: "訊號無效", flat_signal: "訊號變化不足", high_clipping_fraction: "削波比例過高", missing_epoch: "未找到 ECG 片段", missing_features: "RR 特徵缺少", no_valid_epoch: "沒有有效 ECG 片段", risk_followup_ended: "已到達風險追蹤終點", no_matching_ecg_epoch: "未找到此時點的 ECG 片段", wrong_epoch_length: "片段長度不符", sampling_frequency_below_project_minimum: "取樣頻率低於研究規格", empty_signal: "訊號為空", flat_run: "存在過長平坦訊號", low_block_amplitude: "分段振幅不足", excessive_amplitude_range: "振幅範圍過大", suspected_clipping: "疑似訊號削波", detector_error: "搏動偵測失敗", too_few_beats: "可用搏動數不足", incomplete_beat_span: "搏動未覆蓋完整片段", too_many_screened_rr_intervals: "遭篩除 RR 比例過高", insufficient_adjacent_rr_intervals: "有效相鄰 RR 對不足", ecg_decode_unavailable: "ECG 無法解碼", other_quality_rejection: "其他工程品質拒絕", quality_rejected: "未通過工程品質篩選"};
@@ -202,6 +240,7 @@
   }
   function chooseCase(index) {
     pause();
+    state.simulateEcg = false;
     state.caseIndex = index;
     replayPoints = makeReplayPoints(currentCase());
     state.index = Math.min(6, replayPoints.length - 1);
@@ -306,6 +345,50 @@
     drawChart($("rr-chart"), points, [{label: "RMSSD of RR", color: "#087e87", get: function (p) { return p.rr.rmssd_rr_ms; }}, {label: "SDRR", color: "#5d7fc5", get: function (p) { return p.rr.sdrr_ms; }}], {rr: true, label: "RR 變異特徵（毫秒）"});
     METRICS.forEach(function (m) { drawChart(vitalElements[m.key].chart, points, [{label: m.label, color: "#369497", get: function (p) { return p.vitals[m.key]; }}], {spark: true, label: m.label + "（" + m.unit + "）"}); });
   }
+  var MONITOR_PATHS = {stopped: "追蹤已結束", before_first_landmark: "尚未進入預警時點", baseline_unavailable: "缺少常規分數", baseline_with_all_vitals_missing: "四項生命徵象全缺失，仍有模型分數", baseline_and_rr_research: "常規基準＋RR 研究檢視", baseline_only: "常規基準；RR 暫停"};
+  function monitorRrText(row) {
+    if (!row.eligible_update) return "停止／尚未開始評估";
+    if (row.rr_research_available) return "工程片段可研究檢視";
+    if (row.rr_view === "simulated_interruption") return "演練：ECG 中斷";
+    return "RR 暫停研究檢視";
+  }
+  function monitorReason(row) {
+    if (!row.eligible_update) return row.path === "stopped" ? "已到達風險追蹤終點，不沿用先前分數。" : "尚未到達 ICU +6 小時的第一個預警時點。";
+    if (row.rr_view === "simulated_interruption") return "本面板將 ECG 設為中斷；原始資料、圖表、模型分數與通知均未改動。";
+    if (row.rr_research_available) return "工程通過只允許研究檢視；尚未確認正常 NN 與量測準確度。";
+    return row.rr_reason_codes.map(function (code) { return REASONS[code] || (code === "missing_rr_information" ? "未提供可用 RR 資訊" : code); }).join("；") + "。";
+  }
+  function renderMonitoring() {
+    var synthetic = state.dataset.mode === "synthetic";
+    if (!synthetic) state.simulateEcg = false;
+    $("simulate-ecg").disabled = !synthetic;
+    $("simulate-ecg").checked = state.simulateEcg;
+    var trace = monitoringTrace(currentCase(), state.index, state.dataset.mode, state.simulateEcg);
+    var row = trace.rows[trace.rows.length - 1], count = trace.coverage;
+    text("monitor-view", trace.view === "source_replay" ? "原始重播視圖" : "ECG 中斷演練");
+    $("monitor-view").className = "pill " + (state.simulateEcg ? "amber" : "neutral");
+    text("monitor-simulation-note", synthetic ? "演練會將本面板已到達的有效更新點視為 ECG 中斷；不改原始資料、其他圖表或通知。切換病例會重置。" : "本機研究病例停用演練。此面板只稽核匯入的既有分數與品質狀態。");
+    text("monitor-baseline-score", row.baseline_score === null ? "—" : format(row.baseline_score * 100, 2) + "%");
+    text("monitor-score-kind", scoreKind() + " · 固定常規基準");
+    text("monitor-path", MONITOR_PATHS[row.path]);
+    text("monitor-input-count", row.visible_vital_count === null ? "—" : row.visible_vital_count + " / 4 項有數值");
+    text("monitor-input-detail", !row.eligible_update ? "此時點不評估輸入充分性。" : row.missing_vital_keys.length ? "未提供：" + METRICS.filter(function (m) { return row.missing_vital_keys.includes(m.key); }).map(function (m) { return m.label; }).join("、") + "。有分數仍可能依賴補值。" : "四項皆有數值；不代表剛完成測量，也不代表臨床可信度已驗證。");
+    text("monitor-rr-state", monitorRrText(row)); text("monitor-rr-reason", monitorReason(row));
+    text("monitor-coverage", "已提供的 " + count.provided_eligible_updates + " 個有效更新點：常規分數可檢視 " + count.baseline_score_updates + " 個，RR 可研究檢視 " + count.rr_research_updates + " 個。");
+    text("monitor-gap-note", "僅計本病例已提供且已到達的更新點，不是患者時間覆蓋率。" + (trace.unfilled_time_gaps.length ? "另有 " + trace.unfilled_time_gaps.length + " 處時間缺口，未補值或補算。" : "未提供的時間不加入分母。"));
+    var shown = trace.rows.slice(-24);
+    text("monitor-trace-note", "顯示最近 " + shown.length + " / " + trace.rows.length + " 個已到達紀錄；匯出包含目前以前的完整軌跡。");
+    $("monitor-trace-body").replaceChildren();
+    shown.forEach(function (entry, index) {
+      if (index > 0 && entry.relative_hour - shown[index - 1].relative_hour > 1 + EPSILON) {
+        var gap = node("tr", undefined, "monitor-gap"), gapCell = node("td", "時間缺口 · 未提供更新，不補值");
+        gapCell.colSpan = 4; gap.append(gapCell); $("monitor-trace-body").append(gap);
+      }
+      var tr = node("tr");
+      tr.append(node("th", hour(entry.relative_hour)), node("td", MONITOR_PATHS[entry.path]), node("td", monitorRrText(entry)), node("td", entry.visible_vital_count === null ? "—" : entry.visible_vital_count + " / 4"));
+      tr.firstChild.scope = "row"; $("monitor-trace-body").append(tr);
+    });
+  }
   function render() {
     var item = currentCase(), point = replayPoints[state.index], value = point.scores[state.model];
     var synthetic = state.dataset.mode === "synthetic";
@@ -348,6 +431,7 @@
     var observations = [terminal ? "此時點已退出未治療風險集合，所有模型停止出分。" : describeReasons(point), coverage.count === null ? "沒有新的歷史覆蓋評估。" : "最近六個取樣片段中有 " + coverage.count + " 個工程通過；覆蓋不足可能限制 RR 特徵解讀。", state.model === "vitals_all" ? "全風險集合基準使用的評估族群不同，不能直接與配對成績相減。" : "圖中的常規基準與 RR 模型使用相同配對時點；缺值保持空白。", synthetic ? "本病例與所有分數為合成示意，請到研究證據頁核對真實開發結果。" : "本頁僅重播既有分數，不重算 ECG、不訓練模型，也不提供用藥建議。"];
     $("observation-list").replaceChildren(); observations.forEach(function (line) { $("observation-list").append(node("li", line)); });
     text("notification-count", notices.length);
+    renderMonitoring();
     renderCharts();
   }
   function next() {
@@ -406,6 +490,18 @@
       announce("目前時點摘要已交給瀏覽器下載；檔案名稱為 hrv-observation.json。", false);
     } catch (error) { announce("無法產生摘要下載：" + error.message, true); }
   }
+  function exportMonitoring() {
+    var trace = monitoringTrace(currentCase(), state.index, state.dataset.mode, state.simulateEcg);
+    trace.source_label = state.dataset.source_label;
+    trace.case_label = currentCase().label;
+    trace.limitations = ["這是目前以前的來源重播／演練狀態，不是新模型預測。", "RR 增強固定未啟用；開發對照未支持增益，NN 與量測驗證未完成。", "可見數值不代表即時測量，資料新鮮度未提供；有模型分數不代表輸入充分。", "覆蓋只計已提供有效更新點，不計患者小時；時間缺口不補值。", "演練只影響本軌跡，未修改來源資料、圖表、分數或通知。"];
+    try {
+      var url = URL.createObjectURL(new Blob([JSON.stringify(trace, null, 2)], {type: "application/json;charset=utf-8"}));
+      var anchor = node("a"); anchor.href = url; anchor.download = "hrv-monitoring-trace.json"; document.body.append(anchor); anchor.click(); anchor.remove();
+      root.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      announce("已匯出目前以前的監測軌跡，包含來源與演練標記。真實研究病例的匯出請留在本機。", false);
+    } catch (error) { announce("無法產生軌跡下載：" + error.message, true); }
+  }
   $("play-pause").addEventListener("click", function () { if (state.timer === null) play(); else pause(); });
   $("step").addEventListener("click", function () { pause(); next(); });
   $("rewind").addEventListener("click", function () { pause(); state.index = 0; render(); });
@@ -416,6 +512,8 @@
   $("import-file").addEventListener("change", function () { importFile(this.files[0]); this.value = ""; });
   $("restore-demo").addEventListener("click", function () { state.importVersion += 1; state.dataset = validateDataset(root.HRV_DEMO); $("import-error").hidden = true; chooseCase(0); showView("replay"); announce("已回到三個合成情境。", false); });
   $("export-summary").addEventListener("click", exportSummary);
+  $("simulate-ecg").addEventListener("change", function () { state.simulateEcg = state.dataset.mode === "synthetic" && this.checked; renderMonitoring(); });
+  $("export-monitoring").addEventListener("click", exportMonitoring);
   document.querySelectorAll("[data-view]").forEach(function (button) { button.addEventListener("click", function () { showView(button.dataset.view); }); });
   document.querySelector(".brand").addEventListener("click", function () { showView("replay"); });
   root.addEventListener("hashchange", function () { showView(root.location.hash.slice(1)); });

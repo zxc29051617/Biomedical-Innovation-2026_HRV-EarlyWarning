@@ -1,0 +1,502 @@
+{
+  "status": "exploratory_control_comparison_complete",
+  "version": "rr_incremental_controls_v1",
+  "stage": "development_validation_only_no_test_features_or_scores",
+  "specification": {
+    "version": "rr_incremental_controls_v1",
+    "status": "exploratory_followup_specified_after_v1_results_before_new_control_fits",
+    "population": "identical_current_rr_accepted_train_validation_hourly_rows",
+    "variants": {
+      "routine": [
+        "age_years",
+        "age_obscured",
+        "heart_rate",
+        "map",
+        "respiratory_rate",
+        "spo2"
+      ],
+      "availability": [
+        "age_years",
+        "age_obscured",
+        "heart_rate",
+        "map",
+        "respiratory_rate",
+        "spo2",
+        "rr_available_lag0",
+        "rr_available_lag1",
+        "rr_available_lag2",
+        "rr_available_lag3",
+        "rr_available_lag4",
+        "rr_available_lag5",
+        "rr_valid_count",
+        "rr_slope_available"
+      ],
+      "ecg_rate_history": [
+        "age_years",
+        "age_obscured",
+        "heart_rate",
+        "map",
+        "respiratory_rate",
+        "spo2",
+        "rr_available_lag0",
+        "rr_available_lag1",
+        "rr_available_lag2",
+        "rr_available_lag3",
+        "rr_available_lag4",
+        "rr_available_lag5",
+        "rr_valid_count",
+        "rr_slope_available",
+        "mean_rr_ms_lag0",
+        "mean_rr_ms_lag1",
+        "mean_rr_ms_lag2",
+        "mean_rr_ms_lag3",
+        "mean_rr_ms_lag4",
+        "mean_rr_ms_lag5",
+        "ecg_rate_from_mean_rr_bpm_lag0",
+        "ecg_rate_from_mean_rr_bpm_lag1",
+        "ecg_rate_from_mean_rr_bpm_lag2",
+        "ecg_rate_from_mean_rr_bpm_lag3",
+        "ecg_rate_from_mean_rr_bpm_lag4",
+        "ecg_rate_from_mean_rr_bpm_lag5",
+        "mean_rr_ms_slope_per_hour",
+        "ecg_rate_from_mean_rr_bpm_slope_per_hour"
+      ],
+      "rr_variability_history": [
+        "age_years",
+        "age_obscured",
+        "heart_rate",
+        "map",
+        "respiratory_rate",
+        "spo2",
+        "rr_available_lag0",
+        "rr_available_lag1",
+        "rr_available_lag2",
+        "rr_available_lag3",
+        "rr_available_lag4",
+        "rr_available_lag5",
+        "rr_valid_count",
+        "rr_slope_available",
+        "mean_rr_ms_lag0",
+        "mean_rr_ms_lag1",
+        "mean_rr_ms_lag2",
+        "mean_rr_ms_lag3",
+        "mean_rr_ms_lag4",
+        "mean_rr_ms_lag5",
+        "ecg_rate_from_mean_rr_bpm_lag0",
+        "ecg_rate_from_mean_rr_bpm_lag1",
+        "ecg_rate_from_mean_rr_bpm_lag2",
+        "ecg_rate_from_mean_rr_bpm_lag3",
+        "ecg_rate_from_mean_rr_bpm_lag4",
+        "ecg_rate_from_mean_rr_bpm_lag5",
+        "mean_rr_ms_slope_per_hour",
+        "ecg_rate_from_mean_rr_bpm_slope_per_hour",
+        "sdrr_ms_lag0",
+        "rmssd_rr_ms_lag0",
+        "sdrr_ms_lag1",
+        "rmssd_rr_ms_lag1",
+        "sdrr_ms_lag2",
+        "rmssd_rr_ms_lag2",
+        "sdrr_ms_lag3",
+        "rmssd_rr_ms_lag3",
+        "sdrr_ms_lag4",
+        "rmssd_rr_ms_lag4",
+        "sdrr_ms_lag5",
+        "rmssd_rr_ms_lag5"
+      ],
+      "rr_variability_trend": [
+        "age_years",
+        "age_obscured",
+        "heart_rate",
+        "map",
+        "respiratory_rate",
+        "spo2",
+        "rr_available_lag0",
+        "rr_available_lag1",
+        "rr_available_lag2",
+        "rr_available_lag3",
+        "rr_available_lag4",
+        "rr_available_lag5",
+        "rr_valid_count",
+        "rr_slope_available",
+        "mean_rr_ms_lag0",
+        "mean_rr_ms_lag1",
+        "mean_rr_ms_lag2",
+        "mean_rr_ms_lag3",
+        "mean_rr_ms_lag4",
+        "mean_rr_ms_lag5",
+        "ecg_rate_from_mean_rr_bpm_lag0",
+        "ecg_rate_from_mean_rr_bpm_lag1",
+        "ecg_rate_from_mean_rr_bpm_lag2",
+        "ecg_rate_from_mean_rr_bpm_lag3",
+        "ecg_rate_from_mean_rr_bpm_lag4",
+        "ecg_rate_from_mean_rr_bpm_lag5",
+        "mean_rr_ms_slope_per_hour",
+        "ecg_rate_from_mean_rr_bpm_slope_per_hour",
+        "sdrr_ms_lag0",
+        "rmssd_rr_ms_lag0",
+        "sdrr_ms_lag1",
+        "rmssd_rr_ms_lag1",
+        "sdrr_ms_lag2",
+        "rmssd_rr_ms_lag2",
+        "sdrr_ms_lag3",
+        "rmssd_rr_ms_lag3",
+        "sdrr_ms_lag4",
+        "rmssd_rr_ms_lag4",
+        "sdrr_ms_lag5",
+        "rmssd_rr_ms_lag5",
+        "sdrr_ms_slope_per_hour",
+        "rmssd_rr_ms_slope_per_hour"
+      ]
+    },
+    "contrasts": [
+      [
+        "routine",
+        "availability"
+      ],
+      [
+        "availability",
+        "ecg_rate_history"
+      ],
+      [
+        "ecg_rate_history",
+        "rr_variability_history"
+      ],
+      [
+        "rr_variability_history",
+        "rr_variability_trend"
+      ]
+    ],
+    "primary_contrast": [
+      "ecg_rate_history",
+      "rr_variability_history"
+    ],
+    "estimator": {
+      "C": 1.0,
+      "class_weight": null,
+      "solver": "lbfgs",
+      "max_iter": 1000
+    },
+    "preprocessing": {
+      "base": "training_median_with_missing_indicators",
+      "rr": "training_median_without_duplicate_indicators; shared_explicit_lag_and_slope_availability_masks",
+      "scaling": "training_only_StandardScaler"
+    },
+    "seed": 20261101,
+    "patient_bootstrap_replicates": 200,
+    "threshold": "training_negative_99th_percentile_linear_then_six_hour_refractory",
+    "alarm_comparison": "report_achieved_burdens; not_an_equal_false_alarm_burden_claim",
+    "test_features": "forbidden"
+  },
+  "provenance": {
+    "spec_sha256": "016f59a627ba5a66c4df85e556c846ebc375e563f8ce22fbbf5a1926ecaf29bd",
+    "code_sha256": "d0f83af1ba2319623ee17426bf5f2b2bf493a2a0ef3d71f9989a6b4e9ca04d77",
+    "model_table_sha256": "7e7001605e57dd53e94ef260319de6547799c335b821862025a54b0c76ca164c",
+    "patient_split_sha256": "932a00d77d5952a8a0fc58a05e574bf25a4c9dc30e0f95dade942a681348c452",
+    "source_fingerprint_sha256": "2e7f95a06136968723f86df604b17abd0d30cebb1c64ec604d4b38d7eaf3a846"
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "sklearn": "1.9.1",
+    "joblib": "1.6.0"
+  },
+  "same_paired_population": {
+    "train": {
+      "rows": 76970,
+      "binary_rows": 70633,
+      "label_counts": {
+        "positive": 480,
+        "negative": 70153,
+        "censored": 6337
+      },
+      "distinct_patients": 2501,
+      "distinct_binary_patients": 2419,
+      "distinct_events_with_positive_window": 152,
+      "observed_patient_hours": 76636.34722222222
+    },
+    "validation": {
+      "rows": 18025,
+      "binary_rows": 16275,
+      "label_counts": {
+        "positive": 121,
+        "negative": 16154,
+        "censored": 1750
+      },
+      "distinct_patients": 649,
+      "distinct_binary_patients": 630,
+      "distinct_events_with_positive_window": 41,
+      "observed_patient_hours": 17942.87222222222
+    }
+  },
+  "full_validation_riskset": {
+    "rows": 155849,
+    "binary_rows": 139676,
+    "label_counts": {
+      "positive": 1219,
+      "negative": 138457,
+      "censored": 16173
+    },
+    "distinct_patients": 2282,
+    "distinct_binary_patients": 2237,
+    "distinct_events_with_positive_window": 247,
+    "observed_patient_hours": 154368.02055555556
+  },
+  "paired_metrics": {
+    "absolute_metrics": {
+      "routine": {
+        "AUPRC": 0.02418920466168923,
+        "AUROC": 0.5977246891233857,
+        "Brier": 0.00734943553811707
+      },
+      "availability": {
+        "AUPRC": 0.02616978061242268,
+        "AUROC": 0.6004234040746247,
+        "Brier": 0.00734595124740225
+      },
+      "ecg_rate_history": {
+        "AUPRC": 0.030464500023904516,
+        "AUROC": 0.5842930185395322,
+        "Brier": 0.007341764593254386
+      },
+      "rr_variability_history": {
+        "AUPRC": 0.027572099873613417,
+        "AUROC": 0.5839195470865646,
+        "Brier": 0.0073496347901291096
+      },
+      "rr_variability_trend": {
+        "AUPRC": 0.02728949693824367,
+        "AUROC": 0.5851596769523093,
+        "Brier": 0.007350161317070483
+      }
+    },
+    "replicates_requested": 200,
+    "replicates_valid": 200,
+    "replicates_skipped_single_class": 0,
+    "method": "shared_patient_percentile_bootstrap_fixed_predictions_no_refit_unadjusted_multiple_comparisons",
+    "comparisons": {
+      "routine__to__availability": {
+        "point_improvement": {
+          "AUPRC": 0.0019805759507334486,
+          "AUROC": 0.0026987149512389674,
+          "Brier": 3.4842907148200514e-06
+        },
+        "interval_95": {
+          "AUPRC": [
+            -0.003253553035131397,
+            0.018329516207729966
+          ],
+          "AUROC": [
+            -0.010272862027002097,
+            0.02045676673571599
+          ],
+          "Brier": [
+            -3.6625115139111985e-06,
+            1.1251669158920845e-05
+          ]
+        }
+      },
+      "availability__to__ecg_rate_history": {
+        "point_improvement": {
+          "AUPRC": 0.004294719411481837,
+          "AUROC": -0.016130385535092495,
+          "Brier": 4.186654147863254e-06
+        },
+        "interval_95": {
+          "AUPRC": [
+            -0.013249177033393162,
+            0.025242511561171826
+          ],
+          "AUROC": [
+            -0.029771984667262812,
+            -0.005272051927885813
+          ],
+          "Brier": [
+            -8.282926148002857e-06,
+            2.108541956157427e-05
+          ]
+        }
+      },
+      "ecg_rate_history__to__rr_variability_history": {
+        "point_improvement": {
+          "AUPRC": -0.002892400150291099,
+          "AUROC": -0.00037347145296762196,
+          "Brier": -7.87019687472322e-06
+        },
+        "interval_95": {
+          "AUPRC": [
+            -0.015402351885512557,
+            0.01764309665107404
+          ],
+          "AUROC": [
+            -0.028383502885223538,
+            0.03053675811346316
+          ],
+          "Brier": [
+            -1.935106262124682e-05,
+            6.09127359474996e-06
+          ]
+        }
+      },
+      "rr_variability_history__to__rr_variability_trend": {
+        "point_improvement": {
+          "AUPRC": -0.0002826029353697468,
+          "AUROC": 0.0012401298657447324,
+          "Brier": -5.265269413731732e-07
+        },
+        "interval_95": {
+          "AUPRC": [
+            -0.002051853981690719,
+            0.0006965791681775267
+          ],
+          "AUROC": [
+            -0.0026925171477019394,
+            0.004353578260577718
+          ],
+          "Brier": [
+            -2.2326389658059538e-06,
+            1.0679555510622734e-06
+          ]
+        }
+      }
+    }
+  },
+  "frozen_routine_reference_reproduced": true,
+  "limitations": [
+    "Frozen v1 RR are not validated sinus NN or accurate physiological HRV.",
+    "This follow-up was designed after observing v1 development results; no confirmatory or independent clinical claim.",
+    "All models share availability masks from the availability comparator onward; missingness can still be informative.",
+    "Rate controls include mean RR, its reciprocal-rate representation and their six-sample histories; neither equals mean instantaneous HR.",
+    "Routine controls are latest available vital signs, not a full vital-history/trend model.",
+    "Slopes are derived representations of the same history; any gain is not independent physiological information.",
+    "Train quantiles do not guarantee equal achieved validation false-alarm burdens; alarm comparisons are descriptive.",
+    "The locked M2 split is unchanged; prior legacy MI reuse overlap is documented separately."
+  ],
+  "models": {
+    "routine": {
+      "convergence_warning": false,
+      "alarms": {
+        "notifications": 81,
+        "positive_notifications": 5,
+        "false_notifications": 69,
+        "censored_notifications": 7,
+        "refractory_suppressed_crossings": 63,
+        "threshold": 0.02503640185339767,
+        "refractory_hours": 6,
+        "observed_scored_patient_hours": 17942.87222222222,
+        "evaluable_scored_patient_hours": 16262.616944444444,
+        "false_notifications_per_100_observed_patient_hours": 0.38455381694433294,
+        "false_notifications_per_100_evaluable_patient_hours": 0.4242859573936619,
+        "scored_events": 41,
+        "full_riskset_events": 247,
+        "events_caught": 5,
+        "event_sensitivity_among_scored_events": 0.12195121951219512,
+        "event_sensitivity_full_riskset": 0.020242914979757085,
+        "lead_time_hours_mean": 2.029888888888889,
+        "lead_time_hours_median": 1.8163888888888888
+      }
+    },
+    "availability": {
+      "convergence_warning": false,
+      "alarms": {
+        "notifications": 101,
+        "positive_notifications": 5,
+        "false_notifications": 86,
+        "censored_notifications": 10,
+        "refractory_suppressed_crossings": 45,
+        "threshold": 0.026187011474002205,
+        "refractory_hours": 6,
+        "observed_scored_patient_hours": 17942.87222222222,
+        "evaluable_scored_patient_hours": 16262.616944444444,
+        "false_notifications_per_100_observed_patient_hours": 0.47929896024945845,
+        "false_notifications_per_100_evaluable_patient_hours": 0.5288201787805061,
+        "scored_events": 41,
+        "full_riskset_events": 247,
+        "events_caught": 5,
+        "event_sensitivity_among_scored_events": 0.12195121951219512,
+        "event_sensitivity_full_riskset": 0.020242914979757085,
+        "lead_time_hours_mean": 2.3924444444444446,
+        "lead_time_hours_median": 2.5975
+      }
+    },
+    "ecg_rate_history": {
+      "convergence_warning": false,
+      "alarms": {
+        "notifications": 108,
+        "positive_notifications": 8,
+        "false_notifications": 94,
+        "censored_notifications": 6,
+        "refractory_suppressed_crossings": 48,
+        "threshold": 0.027421479912416856,
+        "refractory_hours": 6,
+        "observed_scored_patient_hours": 17942.87222222222,
+        "evaluable_scored_patient_hours": 16262.616944444444,
+        "false_notifications_per_100_observed_patient_hours": 0.5238849100401057,
+        "false_notifications_per_100_evaluable_patient_hours": 0.5780127535507859,
+        "scored_events": 41,
+        "full_riskset_events": 247,
+        "events_caught": 8,
+        "event_sensitivity_among_scored_events": 0.1951219512195122,
+        "event_sensitivity_full_riskset": 0.032388663967611336,
+        "lead_time_hours_mean": 2.1883333333333335,
+        "lead_time_hours_median": 1.712222222222222
+      }
+    },
+    "rr_variability_history": {
+      "convergence_warning": false,
+      "alarms": {
+        "notifications": 79,
+        "positive_notifications": 5,
+        "false_notifications": 69,
+        "censored_notifications": 5,
+        "refractory_suppressed_crossings": 28,
+        "threshold": 0.030033338444367574,
+        "refractory_hours": 6,
+        "observed_scored_patient_hours": 17942.87222222222,
+        "evaluable_scored_patient_hours": 16262.616944444444,
+        "false_notifications_per_100_observed_patient_hours": 0.38455381694433294,
+        "false_notifications_per_100_evaluable_patient_hours": 0.4242859573936619,
+        "scored_events": 41,
+        "full_riskset_events": 247,
+        "events_caught": 5,
+        "event_sensitivity_among_scored_events": 0.12195121951219512,
+        "event_sensitivity_full_riskset": 0.020242914979757085,
+        "lead_time_hours_mean": 2.6595,
+        "lead_time_hours_median": 2.5975
+      }
+    },
+    "rr_variability_trend": {
+      "convergence_warning": false,
+      "alarms": {
+        "notifications": 83,
+        "positive_notifications": 5,
+        "false_notifications": 72,
+        "censored_notifications": 6,
+        "refractory_suppressed_crossings": 27,
+        "threshold": 0.030008822934959996,
+        "refractory_hours": 6,
+        "observed_scored_patient_hours": 17942.87222222222,
+        "evaluable_scored_patient_hours": 16262.616944444444,
+        "false_notifications_per_100_observed_patient_hours": 0.40127354811582566,
+        "false_notifications_per_100_evaluable_patient_hours": 0.4427331729325168,
+        "scored_events": 41,
+        "full_riskset_events": 247,
+        "events_caught": 5,
+        "event_sensitivity_among_scored_events": 0.12195121951219512,
+        "event_sensitivity_full_riskset": 0.020242914979757085,
+        "lead_time_hours_mean": 2.6595,
+        "lead_time_hours_median": 2.5975
+      }
+    }
+  },
+  "publication": {
+    "date": "2026-11-02",
+    "source_code_commit": "65e52029a829491433210102c98aae370fd2833a",
+    "source_report_sha256": "206b9e2fb0fe391a2bb8c80d275f9f3ecc6df4155bbf3a515ea002cdb12b4943",
+    "scope": "Aggregate development results only; no patient rows, individual scores, or model weights.",
+    "environment": {
+      "Python": "3.11.17",
+      "scipy": "1.17.1",
+      "threadpoolctl": "3.7.0"
+    },
+    "environment_note": "Local scientific interpreter reused read-only; frozen baseline metrics and threshold passed unchanged reproduction guards despite version differences."
+  }
+}
