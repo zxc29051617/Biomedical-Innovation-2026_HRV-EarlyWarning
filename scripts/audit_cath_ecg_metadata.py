@@ -25,6 +25,7 @@ MAX_UNCOMPRESSED_BYTES = 20 * 1024 * 1024
 MAX_CSV_MEMBERS = 256
 MISSING_TOKENS = frozenset(("", "na", "n/a", "nan", "null", "none"))
 LABELS = ("AMI", "OMI", "PCI", "ACS", "STEMI", "NSTEMI", "CTO", "Prior_PCI")
+LABEL_VALUES = ("zero", "one", "missing", "other")
 FIELD_ALIASES = {
     "patient_id": ("patient_id",),
     "time_interval": ("time_interval",),
@@ -34,6 +35,7 @@ FIELD_ALIASES = {
 }
 TIME_BINS = ("negative", "zero_to_60_minutes", "over_60_to_360_minutes",
              "over_360_to_1440_minutes", "over_1440_to_10080_minutes", "over_10080_minutes")
+TIME_STRATA = (*TIME_BINS, "missing", "invalid")
 
 
 class AuditError(ValueError):
@@ -132,8 +134,28 @@ class BoundedReader(io.RawIOBase):
         return len(data)
 
 
+class RecordPatientCounts:
+    """Keep IDs in memory; expose only record and distinct-patient counts."""
+    def __init__(self):
+        self.rows = 0
+        self.missing_ids = 0
+        self.patients = set()
+
+    def add(self, patient):
+        self.rows += 1
+        if patient is None:
+            self.missing_ids += 1
+        else:
+            self.patients.add(patient)
+
+    def aggregate(self, id_present):
+        return {"row_count": self.rows,
+                "distinct_patient_count": len(self.patients) if id_present else None,
+                "missing_patient_id_rows": self.missing_ids if id_present else None}
+
+
 def inspect_csv(stream, member_name):
-    """Return aggregates, schema, and in-memory IDs for overlap counts only."""
+    """Return aggregates, schema, and in-memory IDs; never emit ID values."""
     reader = csv.reader(stream, strict=True)
     try:
         columns = next(reader)
@@ -158,6 +180,12 @@ def inspect_csv(stream, member_name):
     bins = Counter({name: 0 for name in TIME_BINS})
     minimum = maximum = None
     labels = {label: Counter({"zero": 0, "one": 0, "missing": 0, "other": 0}) for label in label_columns}
+    patient_records = Counter()
+    label_patients = {label: {value: set() for value in LABEL_VALUES} for label in label_columns}
+    omi_records = {value: RecordPatientCounts() for value in LABEL_VALUES}
+    omi_one_source_stemi_zero = RecordPatientCounts()
+    time_omi = {stratum: {value: RecordPatientCounts() for value in LABEL_VALUES}
+                for stratum in TIME_STRATA}
     filename_counts = {index: Counter({"nonempty": 0, "missing": 0})
                        for field in ("raw_ecg_filename", "median_ecg_filename") for index in matched[field]}
     for row in reader:
@@ -167,28 +195,44 @@ def inspect_csv(stream, member_name):
         if len(row) != len(columns):
             raise AuditError("csv_row_width_mismatch")
         rows += 1
+        patient = None
         if id_column is not None:
             if is_missing(row[id_column]):
                 id_missing += 1
             else:
                 id_nonempty += 1
-                patients.add(row[id_column].strip())
+                patient = row[id_column].strip()
+                patients.add(patient)
+                patient_records[patient] += 1
+        stratum = None
         if time_column is not None:
             value = row[time_column]
             if is_missing(value):
                 times["missing"] += 1
+                stratum = "missing"
             else:
                 minutes = finite_number(value)
                 if minutes is None:
                     times["invalid"] += 1
+                    stratum = "invalid"
                 else:
                     times["valid"] += 1
                     times["noninteger_valid"] += not minutes.is_integer()
-                    bins[time_bin(minutes)] += 1
+                    stratum = time_bin(minutes)
+                    bins[stratum] += 1
                     minimum = minutes if minimum is None else min(minimum, minutes)
                     maximum = minutes if maximum is None else max(maximum, minutes)
-        for label, index in label_columns.items():
-            labels[label][classify_label(row[index])] += 1
+        row_labels = {label: classify_label(row[index]) for label, index in label_columns.items()}
+        for label, value in row_labels.items():
+            labels[label][value] += 1
+            if patient is not None:
+                label_patients[label][value].add(patient)
+        if "OMI" in row_labels:
+            omi_records[row_labels["OMI"]].add(patient)
+            if stratum is not None:
+                time_omi[stratum][row_labels["OMI"]].add(patient)
+            if row_labels["OMI"] == "one" and row_labels.get("STEMI") == "zero":
+                omi_one_source_stemi_zero.add(patient)
         for index, counts in filename_counts.items():
             counts["missing" if is_missing(row[index]) else "nonempty"] += 1
     summary = {
@@ -209,6 +253,37 @@ def inspect_csv(stream, member_name):
         "ecg_filename_fields": {field: [{"column": columns[index], **filename_counts[index]}
                                          for index in matched[field]]
                                 for field in ("raw_ecg_filename", "median_ecg_filename")},
+        "source_label_feasibility": {
+            "source_omi": {"column_present": "OMI" in label_columns,
+                           "counts_by_value": {value: counts.aggregate(id_column is not None)
+                                               for value, counts in omi_records.items()}
+                           if "OMI" in label_columns else None},
+            "source_omi_one_and_source_stemi_zero": {
+                "both_label_columns_present": "OMI" in label_columns and "STEMI" in label_columns,
+                "counts": omi_one_source_stemi_zero.aggregate(id_column is not None)
+                if "OMI" in label_columns and "STEMI" in label_columns else None},
+            "time_interval_by_source_omi": {
+                "both_columns_present": time_column is not None and "OMI" in label_columns,
+                "strata": {stratum: {value: counts.aggregate(id_column is not None)
+                                     for value, counts in by_value.items()}
+                           for stratum, by_value in time_omi.items()}
+                if time_column is not None and "OMI" in label_columns else None},
+            "patient_record_count_distribution": {
+                "patient_id_column_present": id_column is not None,
+                "distribution": [{"record_count": count, "patient_count": frequency}
+                                 for count, frequency in sorted(Counter(patient_records.values()).items())]
+                if id_column is not None else None,
+                "patients_with_multiple_records": sum(count > 1 for count in patient_records.values())
+                if id_column is not None else None},
+            "source_label_variation_within_patient": {
+                label: {"label_column_present": label in label_columns,
+                        "patient_id_column_present": id_column is not None,
+                        "counts": {**{"patients_with_any_" + value: len(label_patients[label][value])
+                                      for value in LABEL_VALUES},
+                                   "patients_with_both_zero_and_one":
+                                   len(label_patients[label]["zero"] & label_patients[label]["one"])}
+                        if label in label_columns and id_column is not None else None}
+                for label in LABELS}},
     }
     schema = {"csv_member": member_name, "columns": columns,
               "normalization": [{"index": index, "original": column, "normalized": normalized[index]}
@@ -243,15 +318,24 @@ def audit_archive(data):
                    "time_interval_unit": "minutes, as specified by source paper Table 2",
                    "time_parser": "finite numeric minutes only; nonnumeric values count as invalid; no duration-format guessing",
                    "label_parser": "numeric 0/1, explicit missing tokens, otherwise other; no clinical meaning inferred",
+                   "source_label_feasibility": {
+                       "patient_counts": "Distinct nonmissing IDs within each same-row condition; patients can appear in multiple cells, so counts are not additive.",
+                       "missing_columns": "Unavailable aggregates are null, not zero; rows without IDs still count as records but not patients.",
+                       "source_stemi_zero": "The source STEMI diagnosis field equals zero on the same row; this is not same-ECG STEMI-criteria negativity.",
+                       "time_strata": "Fixed TIME_BINS plus missing and invalid minutes; no time window or primary ECG is selected.",
+                       "label_variation": "An ID with both zero and one is reported without resolving labels or treating the difference as an error."},
                    "filename_field_aliases": FIELD_ALIASES,
-                   "no_target_or_cohort_selected": True, "no_ecg_waveforms_read": True,
+                   "not_a_modeling_cohort_or_waveform_eligibility_audit": True, "no_ecg_waveforms_read": True,
                    "no_models_fitted_or_evaluated": True}
-    return {"schema_version": "cath-ecg-metadata-audit-v1", "status": "metadata_audit_complete",
+    return {"schema_version": "cath-ecg-metadata-audit-v2", "status": "metadata_audit_complete",
             "csv_count": len(summaries), "expanded_bytes_read": budget[0],
             "csv_summaries": summaries, "cross_csv_patient_id_overlap": overlaps,
             "interpretation_limits": ["Procedure/treatment flags do not establish treatment necessity or angiographic stenosis ground truth.",
                                       "Counts do not establish label definitions, pre-procedure timing, independent patients, or model performance.",
-                                      "No file is automatically chosen as a training target, cohort, or evaluation set."],
+                                      "Source STEMI=0 does not identify ECGs failing a prespecified ST-elevation criterion.",
+                                      "Patient-level any-positive counts are descriptive, not deduplicated primary ECGs or adjudicated event labels.",
+                                      "Time_Interval alone cannot identify the first-arrival ECG without absolute timestamps and encounter/procedure linkage.",
+                                      "Metadata counts do not define a modeling cohort or establish waveform eligibility."],
             "audit_rules": assumptions}, {"schema_version": "cath-ecg-metadata-schema-v1", "csv_schemas": schemas, "audit_rules": assumptions}
 
 

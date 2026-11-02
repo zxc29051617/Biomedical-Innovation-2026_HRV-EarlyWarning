@@ -36,7 +36,7 @@ Protocol 0.3 已建立 1,014,603 個完整逐小時風險窗，完成 340,354 �
 
 [可用性／同源速率／RR 變異量的增量對照](docs/incremental_value_review.md)已於 2026-11-02 用另一個本機科學環境完成真實擬合，原基準重現通過。控制平均速率、歷史與可用性後，加入 RR 變異的 AUPRC 為 0.03046 → 0.02757，差值 −0.00289 [−0.01540, +0.01764]，仍未提供額外預警增益證據；五組及所有相鄰對照完整保留。保留測試未開啟，模型與患者產物留在本機。
 
-**2026-11-02 最新方向：依使用者指定，優先研究心導管相關預測。** [心導管資料可行性](docs/catheterization_feasibility.md)區分術前冠脈病變、後續 PCI 與術後風險，並核對新公開的造影前十二導程 ECG 資料。先確認實際標籤、患者切分與時間，尚未訓練新模型。先前[可信監測提案](docs/trustworthy_monitoring_direction.md)保留作工程背景，暫停警報複核資料支線；原 HRV 結果與快取維持不變。
+**2026-11-02 最新方向：造影前十二導程 ECG 急性冠脈阻塞辨識。** 使用者已支持以全部 OMI 開發，預先指定未達一般 ST 上升門檻子群；[研究規格草案](docs/omi_study_protocol.md)明列同張 ECG 對照、開發資料固定閾值、額外抓到幾例與增加多少偽陽性。公開標籤僅涵蓋急性 culprit TIMI 0–1，不能重建已再通病例的完整 OMI；index ECG、盲判與樣本精度尚待完成，沒有新模型成績。[資料可行性](docs/catheterization_feasibility.md)保留實際盤點。先前[可信監測提案](docs/trustworthy_monitoring_direction.md)保留作工程背景，警報複核支線暫停；原 HRV 結果與快取維持不變。
 
 新資料的 CSV 已實際讀取：公開訓練檔 17,960 列、17,018 位不同患者，含 1,151 筆 OMI 與 4,541 筆 PCI 陽性紀錄；測試檔 1,995 列、1,891 位患者，兩檔 Patient_id 無交集，測試疾病標籤未公開。這些不是波形品質合格後的最終樣本數，多數 ECG 距造影超過一天；實測時間分布與限制見上述可行性文件。
 
@@ -153,6 +153,7 @@ PYTHONPATH=src python -m hrv_early_warning compare \
 - [RR 額外資訊的探索性控制模型](docs/incremental_value_review.md)
 - [可信監測與警報複核的下一版方向](docs/trustworthy_monitoring_direction.md)
 - [心導管相關預測的資料與目標可行性](docs/catheterization_feasibility.md)
+- [急性冠脈阻塞辨識的研究規格草案](docs/omi_study_protocol.md)
 - [回到 MI 的資料與方法可行性](docs/mi_feasibility_review.md)
 - [展示操作與三分鐘導覽](docs/demo_walkthrough.md)
 - [產品交付與驗收紀錄](docs/product_delivery.md)

@@ -86,7 +86,7 @@ class MetadataAggregationTests(unittest.TestCase):
         self.assertEqual(overlaps[0]["shared_patient_id_count"], 1)
         self.assertIsNone(overlaps[1]["shared_patient_id_count"])
         self.assertEqual(summary["csv_count"], 3)
-        self.assertTrue(summary["audit_rules"]["no_target_or_cohort_selected"])
+        self.assertTrue(summary["audit_rules"]["not_a_modeling_cohort_or_waveform_eligibility_audit"])
         self.assertNotIn("private-", json.dumps([summary, schema]))
 
     def test_ambiguous_normalized_header_and_malformed_row_fail_without_values(self):
@@ -100,6 +100,135 @@ class MetadataAggregationTests(unittest.TestCase):
         values = ["0", "0.0", "1", "1e0", "2", "-1", "True", "unknown", "inf", "", "NULL"]
         self.assertEqual([audit.classify_label(x) for x in values],
                          ["zero", "zero", "one", "one", "other", "other", "other", "other", "other", "missing", "missing"])
+
+
+class SourceLabelFeasibilityTests(unittest.TestCase):
+    def test_omi_patient_counts_and_source_stemi_intersection_use_same_row(self):
+        summary, _, _ = inspect(
+            "Patient_id,OMI,STEMI\n"
+            "private-a,1,1\nprivate-a,0,0\n"
+            "private-b,1,0\nprivate-b,1,0\n,1,0\n")
+        result = summary["source_label_feasibility"]
+        self.assertEqual(result["source_omi"]["counts_by_value"]["one"], {
+            "row_count": 4, "distinct_patient_count": 2, "missing_patient_id_rows": 1})
+        # private-a has each condition on a different row and must not enter the intersection.
+        self.assertEqual(result["source_omi_one_and_source_stemi_zero"]["counts"], {
+            "row_count": 3, "distinct_patient_count": 1, "missing_patient_id_rows": 1})
+        self.assertEqual(result["source_label_variation_within_patient"]["OMI"]["counts"]
+                         ["patients_with_both_zero_and_one"], 1)
+        self.assertEqual(result["source_label_variation_within_patient"]["STEMI"]["counts"]
+                         ["patients_with_both_zero_and_one"], 1)
+
+    def test_record_distribution_and_label_variation_do_not_relabel_patients(self):
+        summary, _, _ = inspect(
+            "Patient_id,OMI\nprivate-a,0\nprivate-a,1\nprivate-a,2\n"
+            "private-b,1\nprivate-b,NA\nprivate-c,other\n,0\n")
+        result = summary["source_label_feasibility"]
+        distribution = result["patient_record_count_distribution"]
+        self.assertEqual(distribution["distribution"], [
+            {"record_count": 1, "patient_count": 1},
+            {"record_count": 2, "patient_count": 1},
+            {"record_count": 3, "patient_count": 1}])
+        self.assertEqual(distribution["patients_with_multiple_records"], 2)
+        self.assertEqual(sum(cell["record_count"] * cell["patient_count"]
+                             for cell in distribution["distribution"]), summary["patient_id"]["nonempty_rows"])
+        self.assertEqual(result["source_label_variation_within_patient"]["OMI"]["counts"], {
+            "patients_with_any_zero": 1, "patients_with_any_one": 2,
+            "patients_with_any_missing": 1, "patients_with_any_other": 2,
+            "patients_with_both_zero_and_one": 1})
+        self.assertIsNone(result["source_label_variation_within_patient"]["STEMI"]["counts"])
+        # Source values remain intact; an any-positive patient is not relabeled on other rows.
+        self.assertEqual(summary["labels"]["OMI"]["counts"], {
+            "zero": 2, "one": 2, "missing": 1, "other": 2})
+
+    def test_fixed_time_strata_reconcile_rows_but_patient_counts_are_nonadditive(self):
+        summary, _, _ = inspect(
+            "Patient_id,Time_Interval,OMI\n"
+            "private-p,-1,1\nprivate-p,0,1\nprivate-p,60,1\nprivate-p,60.5,1\n"
+            "private-q,360,0\nprivate-p,361,0\nprivate-q,1440,NA\n"
+            "private-q,1441,2\nprivate-q,10080,0\nprivate-r,10081,1\n"
+            "private-s,,1\nprivate-s,NA,0\nprivate-t,1 days 01:00:00,1\n,inf,1\n")
+        result = summary["source_label_feasibility"]
+        strata = result["time_interval_by_source_omi"]["strata"]
+        self.assertEqual(tuple(strata), audit.TIME_STRATA)
+        self.assertEqual(strata["zero_to_60_minutes"]["one"], {
+            "row_count": 2, "distinct_patient_count": 1, "missing_patient_id_rows": 0})
+        expected = {
+            "negative": {"one": 1},
+            "zero_to_60_minutes": {"one": 2},
+            "over_60_to_360_minutes": {"one": 1, "zero": 1},
+            "over_360_to_1440_minutes": {"zero": 1, "missing": 1},
+            "over_1440_to_10080_minutes": {"other": 1, "zero": 1},
+            "over_10080_minutes": {"one": 1},
+            "missing": {"one": 1, "zero": 1},
+            "invalid": {"one": 2},
+        }
+        for stratum, by_value in strata.items():
+            self.assertEqual({value: cell["row_count"] for value, cell in by_value.items()},
+                             {value: expected[stratum].get(value, 0) for value in audit.LABEL_VALUES})
+        self.assertEqual(strata["invalid"]["one"]["missing_patient_id_rows"], 1)
+        self.assertEqual(sum(cell["row_count"] for by_value in strata.values()
+                             for cell in by_value.values()), summary["row_count"])
+        for value, omi_counts in result["source_omi"]["counts_by_value"].items():
+            self.assertEqual(sum(by_value[value]["row_count"] for by_value in strata.values()),
+                             omi_counts["row_count"])
+        self.assertGreater(sum(by_value["one"]["distinct_patient_count"] for by_value in strata.values()),
+                           result["source_omi"]["counts_by_value"]["one"]["distinct_patient_count"])
+
+    def test_missing_columns_are_unavailable_while_missing_ids_preserve_record_counts(self):
+        summary, _, _ = inspect("Patient_id,Time_Interval\nprivate-a,10\n")
+        result = summary["source_label_feasibility"]
+        self.assertIsNone(result["source_omi"]["counts_by_value"])
+        self.assertIsNone(result["source_omi_one_and_source_stemi_zero"]["counts"])
+        self.assertIsNone(result["time_interval_by_source_omi"]["strata"])
+        for label in result["source_label_variation_within_patient"].values():
+            self.assertIsNone(label["counts"])
+
+        summary, _, _ = inspect("Time_Interval,OMI,STEMI\n10,1,0\n")
+        result = summary["source_label_feasibility"]
+        expected = {"row_count": 1, "distinct_patient_count": None, "missing_patient_id_rows": None}
+        self.assertEqual(result["source_omi"]["counts_by_value"]["one"], expected)
+        self.assertEqual(result["source_omi_one_and_source_stemi_zero"]["counts"], expected)
+        self.assertEqual(result["time_interval_by_source_omi"]["strata"]["zero_to_60_minutes"]["one"], expected)
+        self.assertIsNone(result["patient_record_count_distribution"]["distribution"])
+        self.assertIsNone(result["source_label_variation_within_patient"]["OMI"]["counts"])
+
+        summary, _, _ = inspect("Patient_id,OMI,STEMI\nprivate-a,1,0\n")
+        result = summary["source_label_feasibility"]
+        self.assertIsNone(result["time_interval_by_source_omi"]["strata"])
+        summary, _, _ = inspect("Patient_id,OMI,Time_Interval\nprivate-a,1,10\n")
+        self.assertIsNone(summary["source_label_feasibility"]["source_omi_one_and_source_stemi_zero"]["counts"])
+
+    def test_present_columns_with_no_rows_report_zero_not_unavailable(self):
+        summary, _, _ = inspect("Patient_id,Time_Interval,OMI,STEMI\n")
+        result = summary["source_label_feasibility"]
+        empty = {"row_count": 0, "distinct_patient_count": 0, "missing_patient_id_rows": 0}
+        self.assertEqual(result["source_omi"]["counts_by_value"]["one"], empty)
+        self.assertEqual(result["source_omi_one_and_source_stemi_zero"]["counts"], empty)
+        self.assertEqual(result["time_interval_by_source_omi"]["strata"]["missing"]["one"], empty)
+        self.assertEqual(result["patient_record_count_distribution"]["distribution"], [])
+
+    def test_missing_and_nonbinary_stemi_values_do_not_enter_source_zero_intersection(self):
+        summary, _, _ = inspect(
+            "Patient_id,OMI,STEMI\nprivate-a,1,\nprivate-b,1,2\nprivate-c,1,True\n"
+            "private-d,1,NaN\nprivate-e,unknown,0\nprivate-f,0,0\n")
+        counts = summary["source_label_feasibility"]["source_omi_one_and_source_stemi_zero"]["counts"]
+        self.assertEqual(counts["row_count"], 0)
+        self.assertEqual(counts["distinct_patient_count"], 0)
+
+    def test_order_invariance_and_aggregate_only_output(self):
+        header = "Patient_id,Time_Interval,OMI,STEMI,ecg_row_record\n"
+        rows = ["private-a,10,1,1,private-wave-a", "private-a,61,0,0,private-wave-b",
+                "private-b,360,1,0,private-wave-c", ",bad,1,0,private-wave-d"]
+        forward, schema, _ = inspect(header + "\n".join(rows) + "\n")
+        backward, _, _ = inspect(header + "\n".join(reversed(rows)) + "\n")
+        self.assertEqual(forward, backward)
+        self.assertNotIn("private-", json.dumps([forward, schema]))
+        result, archive_schema = audit.audit_archive(archive_bytes([("CSV/train.csv", header + "\n".join(rows))]))
+        self.assertEqual(result["schema_version"], "cath-ecg-metadata-audit-v2")
+        self.assertIn("not same-ECG", result["audit_rules"]["source_label_feasibility"]["source_stemi_zero"])
+        self.assertTrue(result["audit_rules"]["not_a_modeling_cohort_or_waveform_eligibility_audit"])
+        self.assertNotIn("private-", json.dumps([result, archive_schema]))
 
 
 class ArchiveGuardTests(unittest.TestCase):
